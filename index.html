@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==">
+<title>Nien — The control plane for autonomous work</title>
+<meta name="description" content="Nien is the control plane for autonomous work. Scoped access to your data, rules your team owns, and a track record for every agent.">
+<style>
+:root {
+  --ink: #161f1b;
+  --ink-soft: #3a453f;
+  --muted: #5f6a63;
+  --ground: #faf8f3;
+  --paper: #f1ede3;
+  --paper-edge: #e2dccc;
+  --card: #ffffff;
+  --line: #e5e0d3;
+  --line-strong: #cfc8b5;
+  --green: #2f5d50;
+  --green-deep: #1c3a31;
+  --green-soft: #e7efe9;
+  --green-text: #2f5d50;
+  --on-green: #f2f0e8;
+  --on-green-muted: #b9cec5;
+  --shadow: 0 1px 2px rgba(22, 31, 27, .05), 0 8px 24px -12px rgba(22, 31, 27, .12);
+  --font-sans: "Inter", "SF Pro Text", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8ebe6;
+    --ink-soft: #c3cbc4;
+    --muted: #93a099;
+    --ground: #101714;
+    --paper: #18211d;
+    --paper-edge: #243029;
+    --card: #151e1a;
+    --line: #232e28;
+    --line-strong: #33413a;
+    --green: #3d7263;
+    --green-deep: #16211c;
+    --green-soft: #1a2822;
+    --green-text: #8fc0af;
+    --on-green: #eef1ec;
+    --on-green-muted: #a7bcb2;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
+  }
+}
+:root[data-theme="light"] {
+  --ink: #161f1b;
+  --ink-soft: #3a453f;
+  --muted: #5f6a63;
+  --ground: #faf8f3;
+  --paper: #f1ede3;
+  --paper-edge: #e2dccc;
+  --card: #ffffff;
+  --line: #e5e0d3;
+  --line-strong: #cfc8b5;
+  --green: #2f5d50;
+  --green-deep: #1c3a31;
+  --green-soft: #e7efe9;
+  --green-text: #2f5d50;
+  --on-green: #f2f0e8;
+  --on-green-muted: #b9cec5;
+  --shadow: 0 1px 2px rgba(22, 31, 27, .05), 0 8px 24px -12px rgba(22, 31, 27, .12);
+}
+:root[data-theme="dark"] {
+  --ink: #e8ebe6;
+  --ink-soft: #c3cbc4;
+  --muted: #93a099;
+  --ground: #101714;
+  --paper: #18211d;
+  --paper-edge: #243029;
+  --card: #151e1a;
+  --line: #232e28;
+  --line-strong: #33413a;
+  --green: #3d7263;
+  --green-deep: #16211c;
+  --green-soft: #1a2822;
+  --green-text: #8fc0af;
+  --on-green: #eef1ec;
+  --on-green-muted: #a7bcb2;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+p { margin: 0; }
+h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+
+/* ---------- nav ---------- */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner {
+  display: flex; align-items: center; gap: 32px;
+  height: 64px;
+}
+.wordmark {
+  font-weight: 700; font-size: 19px; letter-spacing: -0.02em;
+  text-decoration: none; display: flex; align-items: center; gap: 11px;
+}
+.wordmark img {
+  width: 27px; height: 27px; border-radius: 7px; display: block;
+}
+.nav-links { display: flex; gap: 26px; margin-left: auto; }
+.nav-links a {
+  text-decoration: none; font-size: 14px; color: var(--muted);
+  transition: color .15s ease;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-links a[aria-current="page"] {
+  color: var(--ink); font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--green);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 7px;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-size: 15px; font-weight: 600;
+  padding: 11px 22px; border-radius: 8px; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .1s ease;
+}
+.btn-primary { background: var(--green); color: var(--on-green); }
+.btn-primary:hover { background: color-mix(in srgb, var(--green) 88%, var(--ink)); }
+.btn-ghost { border-color: var(--line-strong); color: var(--ink); background: transparent; }
+.btn-ghost:hover { border-color: var(--green); color: var(--green-text); }
+.btn-sm { padding: 8px 16px; font-size: 14px; border-radius: 7px; }
+.nav .btn-sm { margin-left: 4px; }
+@media (max-width: 900px) { .nav-links { display: none; } .nav .btn-sm { margin-left: auto; } }
+
+/* ---------- shared section furniture ---------- */
+section { padding: 88px 0; border-bottom: 1px solid var(--line); }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-text);
+  display: block; margin-bottom: 18px;
+}
+.h2 {
+  font-size: clamp(28px, 3.6vw, 40px); font-weight: 700;
+  letter-spacing: -0.025em; line-height: 1.12; max-width: 21ch;
+}
+.h3 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+.lede { font-size: 18px; color: var(--ink-soft); max-width: 62ch; margin-top: 20px; }
+.body-col { max-width: 66ch; color: var(--ink-soft); }
+.body-col p + p { margin-top: 16px; }
+
+/* ---------- hero / page head ---------- */
+.hero { padding: 96px 0 80px; border-bottom: 1px solid var(--line); }
+.hero h1 {
+  font-size: clamp(36px, 5.2vw, 60px); font-weight: 750;
+  letter-spacing: -0.032em; line-height: 1.06; max-width: 20ch;
+}
+.hero h1 .q { color: var(--green-text); }
+.hero .lede { font-size: 19px; max-width: 66ch; }
+.hero-ctas { display: flex; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
+.hero-note {
+  margin-top: 18px; font-family: var(--font-mono); font-size: 12.5px; color: var(--muted);
+}
+.page-head { padding: 84px 0 76px; border-bottom: 1px solid var(--line); }
+.page-head h1 {
+  font-size: clamp(32px, 4.4vw, 52px); font-weight: 750;
+  letter-spacing: -0.03em; line-height: 1.08; max-width: 24ch;
+}
+
+/* ---------- diagram frames ---------- */
+.diagram-frame {
+  margin-top: 64px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: var(--shadow); overflow-x: auto;
+}
+.diagram-frame .caption {
+  padding: 14px 22px; border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+  display: flex; justify-content: space-between; gap: 16px;
+}
+.cp {
+  display: grid; grid-template-columns: 1fr auto 1.15fr auto 1fr;
+  align-items: center; gap: 0; padding: 36px 28px; min-width: 860px;
+}
+.cp-stack { display: flex; flex-direction: column; gap: 10px; }
+.cp-label {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+}
+.chip {
+  background: var(--paper); border: 1px solid var(--paper-edge);
+  border-radius: 8px; padding: 11px 15px; font-size: 14px; font-weight: 550;
+}
+.cp-core {
+  background: var(--green); color: var(--on-green);
+  border-radius: 12px; padding: 26px 24px; text-align: left;
+  box-shadow: 0 12px 32px -12px color-mix(in srgb, var(--green) 55%, transparent);
+}
+.cp-core .name { font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+.cp-core ul { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.cp-core li {
+  font-size: 13.5px; color: var(--on-green-muted);
+  display: flex; gap: 9px; align-items: baseline;
+}
+.cp-core li::before { content: "▪"; color: var(--on-green); font-size: 10px; }
+.cp-flows { display: grid; gap: 26px; padding: 0 18px; }
+.flow { text-align: center; }
+.flow .arrow { display: block; height: 12px; position: relative; }
+.flow .arrow::before {
+  content: ""; position: absolute; left: 4px; right: 4px; top: 50%;
+  border-top: 1.5px solid var(--line-strong);
+}
+.flow .arrow::after {
+  content: ""; position: absolute; top: 50%; width: 7px; height: 7px;
+  border-top: 1.5px solid var(--line-strong); border-right: 1.5px solid var(--line-strong);
+}
+.flow.right .arrow::after { right: 4px; transform: translateY(-50%) rotate(45deg); }
+.flow.left .arrow::after { left: 4px; transform: translateY(-50%) rotate(-135deg); }
+.flow .flabel {
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+  display: block; margin-top: 7px; letter-spacing: .02em; white-space: nowrap;
+}
+.cp-agents {
+  background: var(--paper); border: 1px dashed var(--line-strong);
+  border-radius: 12px; padding: 20px;
+}
+.cp-agents .name { font-weight: 650; font-size: 15.5px; }
+.cp-agents .sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.cp-agents .roster { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.cp-agents .roster span {
+  font-family: var(--font-mono); font-size: 11.5px; padding: 5px 9px;
+  border-radius: 6px; background: var(--card); border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+
+/* ---------- problem split ---------- */
+.split { display: grid; grid-template-columns: 5fr 6fr; gap: 72px; align-items: start; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; gap: 36px; } }
+
+/* ---------- pillars ---------- */
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 52px; }
+@media (max-width: 900px) { .pillars { grid-template-columns: 1fr; } }
+.pillar {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 30px 28px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.pillar .glyph {
+  width: 40px; height: 40px; border-radius: 9px; background: var(--green-soft);
+  color: var(--green-text); display: grid; place-items: center;
+}
+.pillar .glyph svg { width: 20px; height: 20px; }
+.pillar p { font-size: 15px; color: var(--ink-soft); }
+.pillar .kicker {
+  margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 12px; color: var(--green-text);
+}
+
+/* ---------- compare table ---------- */
+.compare-scroll { overflow-x: auto; margin-top: 48px; }
+table.compare {
+  width: 100%; min-width: 640px; border-collapse: separate; border-spacing: 0;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  overflow: hidden; box-shadow: var(--shadow); font-size: 15px;
+}
+.compare th, .compare td { padding: 18px 24px; text-align: left; vertical-align: top; }
+.compare thead th {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em;
+  text-transform: uppercase; font-weight: 600;
+  border-bottom: 1px solid var(--line); color: var(--muted);
+}
+.compare thead th.nien-col { color: var(--green-text); }
+.compare tbody tr + tr td { border-top: 1px solid var(--line); }
+.compare td { color: var(--ink-soft); width: 50%; }
+.compare td.nien-col {
+  background: var(--green-soft); color: var(--ink); font-weight: 500;
+  border-left: 1px solid var(--line);
+}
+.compare-note { margin-top: 18px; font-size: 15px; color: var(--muted); }
+
+/* ---------- gartner ---------- */
+.signal {
+  display: grid; grid-template-columns: auto 1fr; gap: 56px;
+  align-items: center; background: var(--paper); border: 1px solid var(--paper-edge);
+  border-radius: 16px; padding: 48px 52px;
+}
+@media (max-width: 820px) { .signal { grid-template-columns: 1fr; gap: 24px; padding: 36px 30px; } }
+.signal .stat {
+  font-size: clamp(64px, 8vw, 104px); font-weight: 750; letter-spacing: -0.04em;
+  line-height: 1; color: var(--green-text); font-variant-numeric: tabular-nums;
+}
+.signal .stat small { display: block; font-size: 13px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; font-family: var(--font-mono); color: var(--muted); margin-top: 14px; }
+.signal p { color: var(--ink-soft); max-width: 58ch; }
+.signal p + p { margin-top: 14px; }
+
+/* ---------- platform steps ---------- */
+.steps { counter-reset: step; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 56px; }
+@media (max-width: 1000px) { .steps { grid-template-columns: 1fr; } }
+.step {
+  counter-increment: step; background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 24px 22px 26px; position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.step.accent { background: var(--green); border-color: var(--green); color: var(--on-green); }
+.step .num {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+}
+.step .num::before { content: "0" counter(step); letter-spacing: .1em; }
+.step.accent .num { color: var(--on-green-muted); }
+.step h3 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+.step p { font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.step.accent p { color: var(--on-green-muted); }
+
+/* ---------- autonomy ladder ---------- */
+.ladder-frame {
+  margin-top: 56px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: var(--shadow); overflow-x: auto;
+}
+.ladder {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+  align-items: end; padding: 44px 32px 20px; min-width: 760px;
+}
+.rung { display: flex; flex-direction: column; gap: 0; }
+.rung .box {
+  background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 10px;
+  padding: 18px 18px 20px;
+}
+.rung:nth-child(4) .box { background: var(--green); border-color: var(--green); }
+.rung:nth-child(4) .box h4, .rung:nth-child(4) .box p { color: var(--on-green); }
+.rung:nth-child(4) .box p { color: var(--on-green-muted); }
+.rung .box h4 { font-size: 15px; font-weight: 650; }
+.rung .box p { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+.rung .riser { height: 0; }
+.rung:nth-child(2) .riser { height: 28px; }
+.rung:nth-child(3) .riser { height: 56px; }
+.rung:nth-child(4) .riser { height: 84px; }
+.ladder-meta {
+  display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  padding: 18px 32px 26px; min-width: 760px;
+}
+.ladder-meta span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.ladder-meta .up::before { content: "→ "; color: var(--green-text); }
+.ladder-meta .down::before { content: "⤺ "; color: var(--green-text); }
+
+/* ---------- security ---------- */
+.sec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; margin-top: 52px; border-top: 1px solid var(--line); }
+@media (max-width: 820px) { .sec-grid { grid-template-columns: 1fr; } }
+.sec-item { padding: 30px 36px 32px 0; border-bottom: 1px solid var(--line); }
+.sec-grid .sec-item:nth-child(odd) { border-right: 1px solid var(--line); }
+.sec-grid .sec-item:nth-child(even) { padding-left: 36px; padding-right: 0; }
+@media (max-width: 820px) {
+  .sec-grid .sec-item:nth-child(odd) { border-right: none; }
+  .sec-grid .sec-item:nth-child(even) { padding-left: 0; }
+}
+.sec-item h3 { font-size: 17px; font-weight: 650; display: flex; align-items: baseline; gap: 12px; }
+.sec-item h3::before { content: "▪"; color: var(--green-text); font-size: 11px; }
+.sec-item p { margin-top: 10px; font-size: 15px; color: var(--ink-soft); }
+
+/* ---------- solutions ---------- */
+.sol-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 52px; }
+@media (max-width: 900px) { .sol-grid { grid-template-columns: 1fr; } }
+.sol {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 30px; box-shadow: var(--shadow);
+}
+.sol h3 { font-size: 19px; letter-spacing: -0.01em; }
+.sol .pain { margin-top: 10px; font-size: 14.5px; color: var(--muted); }
+.sol dl { margin: 20px 0 0; display: grid; gap: 14px; }
+.sol dt {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--green-text); margin-bottom: 4px;
+}
+.sol dd { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+
+/* ---------- AP flow diagram ---------- */
+.ap-frame { margin-top: 26px; }
+.ap {
+  display: grid; grid-template-columns: 1fr auto 1fr auto 1.1fr auto 1fr;
+  align-items: center; padding: 36px 28px; min-width: 900px; column-gap: 0; row-gap: 14px;
+}
+.ap .node {
+  background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 9px;
+  padding: 13px 15px; font-size: 13.5px; font-weight: 550; text-align: center;
+}
+.ap .node small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.ap .node.green { background: var(--green); border-color: var(--green); color: var(--on-green); }
+.ap .node.green small { color: var(--on-green-muted); }
+.ap .branch { display: grid; gap: 12px; }
+.ap .flow { padding: 0 14px; }
+
+/* ---------- pricing ---------- */
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 52px; }
+@media (max-width: 900px) { .tiers { grid-template-columns: 1fr; } }
+.tier {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 32px 30px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow);
+}
+.tier.featured { border-color: var(--green); border-width: 1.5px; position: relative; }
+.tier .tag {
+  position: absolute; top: -11px; left: 26px; background: var(--green); color: var(--on-green);
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 20px;
+}
+.tier h3 { font-size: 21px; }
+.tier .basis { font-family: var(--font-mono); font-size: 12px; color: var(--green-text); letter-spacing: .04em; }
+.tier p { font-size: 14.5px; color: var(--ink-soft); }
+.tier ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.tier li { font-size: 14px; color: var(--ink-soft); display: flex; gap: 10px; }
+.tier li::before { content: "✓"; color: var(--green-text); font-weight: 700; flex: none; }
+.tier .btn { margin-top: auto; }
+.pricing-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 56px; }
+@media (max-width: 820px) { .pricing-notes { grid-template-columns: 1fr; } }
+.pricing-notes h3 { font-size: 16px; margin-bottom: 10px; }
+.pricing-notes p { font-size: 15px; color: var(--ink-soft); }
+
+/* ---------- builders band ---------- */
+.builders { background: var(--green-deep); border-bottom: none; color: var(--on-green); }
+.builders .eyebrow { color: var(--on-green-muted); }
+.builders .h2, .builders h1 { color: var(--on-green); }
+.builders h1 {
+  font-size: clamp(32px, 4.4vw, 52px); font-weight: 750;
+  letter-spacing: -0.03em; line-height: 1.08; max-width: 24ch;
+}
+.builders .lede, .builders .body-col { color: var(--on-green-muted); }
+.builders-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 52px; }
+@media (max-width: 900px) { .builders-grid { grid-template-columns: 1fr; } }
+.builders-grid h3 { font-size: 16.5px; color: var(--on-green); }
+.builders-grid p { margin-top: 10px; font-size: 14.5px; color: var(--on-green-muted); }
+.builders-grid .cell { padding-top: 22px; border-top: 1px solid color-mix(in srgb, var(--on-green) 22%, transparent); }
+.builders .ask {
+  margin-top: 52px; padding: 26px 30px; border: 1px dashed color-mix(in srgb, var(--on-green) 30%, transparent);
+  border-radius: 12px; font-size: 15px; color: var(--on-green-muted); max-width: 72ch;
+}
+.builders .ask strong { color: var(--on-green); font-weight: 650; }
+.builders-ctas { display: flex; gap: 14px; margin-top: 36px; flex-wrap: wrap; }
+.builders .btn-primary { background: var(--on-green); color: var(--green-deep); }
+.builders .btn-primary:hover { background: #ffffff; }
+.builders .btn-ghost { border-color: color-mix(in srgb, var(--on-green) 35%, transparent); color: var(--on-green); }
+.builders .btn-ghost:hover { border-color: var(--on-green); }
+
+/* ---------- about / closing ---------- */
+.beliefs { display: grid; gap: 0; margin-top: 48px; max-width: 70ch; }
+.belief { padding: 26px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 150px 1fr; gap: 28px; }
+@media (max-width: 700px) { .belief { grid-template-columns: 1fr; gap: 8px; } }
+.belief .k { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--green-text); padding-top: 4px; }
+.belief p { color: var(--ink-soft); font-size: 16px; }
+
+.contact-rows { display: grid; gap: 0; margin-top: 44px; max-width: 70ch; }
+.contact-row {
+  display: grid; grid-template-columns: 190px 1fr; gap: 28px; align-items: baseline;
+  padding: 20px 0; border-top: 1px solid var(--line);
+}
+.contact-row:last-child { border-bottom: 1px solid var(--line); }
+@media (max-width: 700px) { .contact-row { grid-template-columns: 1fr; gap: 6px; } }
+.contact-row .k { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--green-text); }
+.contact-row p { font-size: 15.5px; color: var(--ink-soft); }
+
+.closing { text-align: left; padding: 100px 0; }
+.closing .h2 { max-width: 26ch; }
+.closing .lede { max-width: 60ch; }
+
+/* ---------- footer ---------- */
+footer { padding: 56px 0 64px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.foot-grid { display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+.foot-grid nav { display: flex; gap: 22px; flex-wrap: wrap; }
+.foot-grid a { text-decoration: none; color: var(--muted); }
+.foot-grid a:hover { color: var(--ink); }
+.foot-grid .wordmark { font-size: 16px; color: var(--ink); }
+.foot-grid .wordmark img { width: 22px; height: 22px; border-radius: 6px; }
+.foot-contact { display: flex; gap: 22px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12.5px; margin-top: 22px; }
+
+/* ---------- reveal ---------- */
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.in { opacity: 1; transform: none; }
+</style>
+
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="wordmark" href="index.html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==" alt="">Nien</a>
+    <nav class="nav-links" aria-label="Pages">
+      <a href="platform.html">Platform</a>
+      <a href="security.html">Security & Control</a>
+      <a href="solutions.html">Solutions</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="builders.html">For Agent Builders</a>
+      <a href="about.html">About</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#contact">Book a demo</a>
+  </div>
+</header>
+
+<main>
+<!-- ============ HERO ============ -->
+<section class="hero" aria-label="Introduction">
+  <div class="wrap">
+    <span class="eyebrow">The control plane for autonomous work</span>
+    <h1>AI agents will do real work in your company. <span class="q">The question is under whose rules.</span></h1>
+    <p class="lede">Nien sits between your data and your agents. Each agent sees only the slice of the business it needs, every action is checked against rules your team sets, and everything it does goes on the record. Nothing runs outside your rules, and no payment leaves without them.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#contact">Book a demo</a>
+      <a class="btn btn-ghost" href="platform.html">See how it works</a>
+    </div>
+    <p class="hero-note">No rip-and-replace. Nien connects to what you have.</p>
+
+    <div class="diagram-frame reveal">
+      <div class="caption"><span>Where Nien sits</span><span>data stays put</span></div>
+      <div class="cp" role="img" aria-label="Diagram: company systems on the left, Nien in the middle, agents on the right. Data flows into Nien, which passes each agent only its scoped slice. Agents propose actions; only actions that pass the company's rules reach the systems.">
+        <div class="cp-stack">
+          <span class="cp-label">Your systems</span>
+          <span class="chip">ERP</span>
+          <span class="chip">CRM</span>
+          <span class="chip">Email &amp; chat</span>
+          <span class="chip">Spreadsheets &amp; files</span>
+        </div>
+        <div class="cp-flows">
+          <div class="flow right"><span class="arrow"></span><span class="flabel">data stays put</span></div>
+          <div class="flow left"><span class="arrow"></span><span class="flabel">actions that pass your rules</span></div>
+        </div>
+        <div class="cp-core">
+          <div class="name">Nien</div>
+          <ul>
+            <li>Scoped access per agent, per task</li>
+            <li>Your rules, checked the same way every time</li>
+            <li>A signed record of every action</li>
+          </ul>
+        </div>
+        <div class="cp-flows">
+          <div class="flow right"><span class="arrow"></span><span class="flabel">only the slice each agent needs</span></div>
+          <div class="flow left"><span class="arrow"></span><span class="flabel">proposed actions</span></div>
+        </div>
+        <div class="cp-agents">
+          <div class="name">AI agents</div>
+          <p class="sub">Yours or third-party, graded the same way.</p>
+          <div class="roster">
+            <span>accounts-payable</span>
+            <span>bookkeeping</span>
+            <span>collections</span>
+            <span>treasury</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section aria-labelledby="problem-h">
+  <div class="wrap split">
+    <div>
+      <span class="eyebrow">The problem</span>
+      <h2 class="h2" id="problem-h">The problem isn't the agents. It's what you'd have to give them.</h2>
+    </div>
+    <div class="body-col">
+      <p>Your company's knowledge lives in a dozen places: the ERP, the CRM, email threads, chat messages, spreadsheets, shared drives. An agent doing real finance work needs to read across all of them. Hand over broad access and you have created a risk no auditor will sign off on. Hold everything back and the agent is useless.</p>
+      <p>Money makes it sharper. An agent that pays invoices or chases receivables touches cash. One bad call on a convincing fake invoice and the money is gone before anyone looks.</p>
+      <p>The big vendors sell agent governance, but only inside their own products, at their prices, watching only the data that lives in their systems. Your business does not run inside one product.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PILLARS ============ -->
+<section aria-labelledby="pillars-h">
+  <div class="wrap">
+    <span class="eyebrow">What Nien does</span>
+    <h2 class="h2" id="pillars-h">Three controls, on every action, from the first day.</h2>
+    <div class="pillars">
+      <article class="pillar reveal">
+        <div class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="1.5"/><path d="M15 5h6M15 9h6M15 13h6M15 17h6" opacity=".35"/></svg>
+        </div>
+        <h3 class="h3">Each agent sees only what it needs</h3>
+        <p>Nien connects to the systems you already run and hands each agent a defined slice. The accounts payable agent sees supplier invoices and payment terms. It does not see payroll, contracts, or board minutes. Scope is set per agent, per task, and you can narrow it or cut it at any time.</p>
+        <span class="kicker">scope: per agent, per task</span>
+      </article>
+      <article class="pillar reveal">
+        <div class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        </div>
+        <h3 class="h3">Your rules, checked the same way every time</h3>
+        <p>Every action an agent attempts runs through Nomos, the rules engine at the center of Nien. The rules are yours: spend limits, who must approve what, which accounts an agent may touch. The check is not another AI making a judgment call. Same action, same rules, same answer, every time. No model ever decides whether a payment goes out.</p>
+        <span class="kicker">no model in the approval path</span>
+      </article>
+      <article class="pillar reveal">
+        <div class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>
+        </div>
+        <h3 class="h3">Agents earn trust, and we keep score</h3>
+        <p>Every action produces a signed record: what the agent tried, what the rules said, what happened. That record becomes the agent's grade. New agents start by watching and suggesting. They act on their own only after the record shows they have earned it, and only inside the limits you set. Third-party agents on the platform are graded exactly the same way.</p>
+        <span class="kicker">trust: earned on the record</span>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section aria-labelledby="compare-h">
+  <div class="wrap">
+    <span class="eyebrow">How it compares</span>
+    <h2 class="h2" id="compare-h">The walled gardens govern agents too. Inside their walls.</h2>
+    <div class="compare-scroll">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th scope="col">The big-vendor approach</th>
+            <th scope="col" class="nien-col">Nien</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sees only the data inside their own products</td>
+            <td class="nien-col">Works across the systems you already run: SAP, NetSuite, Tally, your inbox, your drives</td>
+          </tr>
+          <tr>
+            <td>Priced per seat, for the Fortune 500</td>
+            <td class="nien-col">Priced for the work done, not for how many people log in</td>
+          </tr>
+          <tr>
+            <td>Their governance, their terms</td>
+            <td class="nien-col">Your rules stay yours. You can read them, change them, and take them with you</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="compare-note">No rip-and-replace. Nien connects to what you have.</p>
+  </div>
+</section>
+
+<!-- ============ GARTNER ============ -->
+<section aria-labelledby="signal-h">
+  <div class="wrap">
+    <span class="eyebrow">The Gartner signal</span>
+    <h2 class="h2" id="signal-h" style="margin-bottom:48px">The correction is coming.</h2>
+    <div class="signal reveal">
+      <div class="stat">40%<small>of enterprises, by 2027</small></div>
+      <div>
+        <p>Gartner predicted in May 2026 that 40% of enterprises will demote or decommission autonomous agents by 2027, because governance gaps tend to surface only after an incident. Their recommendation: run agents on tiered autonomy levels, from observe, to advise, to act with approval, to act on their own.</p>
+        <p>That is a prediction about the market, not a comment on Nien. But it describes exactly the failure Nien exists to prevent, and those tiers are how Nien has worked from the start.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CLOSING CTA ============ -->
+<section class="closing" id="contact" aria-labelledby="closing-h" style="border-bottom:none">
+  <div class="wrap">
+    <span class="eyebrow">Get started</span>
+    <h2 class="h2" id="closing-h">Put an agent to work under your rules.</h2>
+    <p class="lede">Most pilots start with one workflow, usually accounts payable, in observe mode. You watch what it would have done before it does anything.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#contact">Book a demo</a>
+      <a class="btn btn-ghost" href="platform.html">Read how the platform works</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <a class="wordmark" href="index.html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==" alt="">Nien</a>
+      <nav aria-label="Footer">
+        <a href="index.html">Home</a>
+        <a href="platform.html">Platform</a>
+        <a href="security.html">Security & Control</a>
+        <a href="solutions.html">Solutions</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="builders.html">For Agent Builders</a>
+        <a href="about.html">About</a>
+      </nav>
+    </div>
+    <div class="foot-contact">
+      <span>demos → book a demo</span>
+      <span>builders → apply to list your agent</span>
+      <span>press → talk to us</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var els = document.querySelectorAll(".reveal");
+    if (reduce || !("IntersectionObserver" in window)) {
+      els.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+
+</body>
+</html>

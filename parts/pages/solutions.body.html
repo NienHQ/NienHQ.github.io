@@ -1,0 +1,90 @@
+<!-- ============ PAGE HEAD ============ -->
+<section class="page-head" aria-label="Solutions introduction">
+  <div class="wrap">
+    <span class="eyebrow">Solutions</span>
+    <h1>Finance work agents can carry today, with your rules on every action.</h1>
+    <p class="lede">Nien governs any workflow an agent can carry. Finance is where most companies start, because it is where a mistake costs the most and where the controls prove themselves fastest. Four places to put a governed agent to work first. Each one follows the same shape: the agent does the work, Nien enforces the limits, you see everything.</p>
+  </div>
+</section>
+
+<!-- ============ WORKFLOWS ============ -->
+<section aria-labelledby="workflows-h">
+  <div class="wrap">
+    <span class="eyebrow">The workflows</span>
+    <h2 class="h2" id="workflows-h">Where the first governed agent goes to work.</h2>
+
+    <div class="sol-grid">
+      <article class="sol reveal">
+        <h3>Accounts payable</h3>
+        <p class="pain">Invoices arrive by email, portal, and PDF. Someone keys them in, matches them, chases approvals, and schedules payment. It is slow, error-prone, and the exact place invoice fraud lives.</p>
+        <dl>
+          <div><dt>What the agent does</dt><dd>Reads incoming invoices wherever they arrive, extracts and codes them, matches them against orders and receipts, flags anything that does not line up, and schedules payment for what does.</dd></div>
+          <div><dt>What Nien enforces</dt><dd>Spend limits per supplier and per payment. Two approvals above your threshold. No payment to an unverified bank account. Duplicate detection before scheduling, not after.</dd></div>
+          <div><dt>What the owner sees</dt><dd>A queue of what was paid, what is waiting on approval, and what was blocked and why, with the full trail behind every line.</dd></div>
+        </dl>
+      </article>
+
+      <article class="sol reveal">
+        <h3>Bookkeeping and reconciliation</h3>
+        <p class="pain">The books are always a few weeks behind reality, and reconciliation eats the days before every close.</p>
+        <dl>
+          <div><dt>What the agent does</dt><dd>Works as a shadow bookkeeper. It builds a parallel set of books from your bank feeds, invoices, and statements, and reconciles them daily. It writes nothing to your ERP until its parallel books have matched yours, entry for entry, over a period you choose.</dd></div>
+          <div><dt>What Nien enforces</dt><dd>Read-only access until the agent has earned write access on its record. Even then, entries above a materiality threshold wait for review.</dd></div>
+          <div><dt>What the owner sees</dt><dd>A daily match report between the shadow books and the real ones, and a clear line on when, and whether, to let the agent write.</dd></div>
+        </dl>
+      </article>
+
+      <article class="sol reveal">
+        <h3>Collections and receivables</h3>
+        <p class="pain">Overdue invoices sit because chasing them is nobody's favorite job, and cash suffers for it.</p>
+        <dl>
+          <div><dt>What the agent does</dt><dd>Tracks every open invoice, sends reminders on your schedule and in your tone, escalates the accounts that stop responding, and prepares the picture your team needs before a call.</dd></div>
+          <div><dt>What Nien enforces</dt><dd>Approved templates only. No discounts, waivers, or payment-plan terms beyond what you have authorized. Named accounts can be marked hands-off entirely.</dd></div>
+          <div><dt>What the owner sees</dt><dd>Days-sales-outstanding trending, every message the agent sent, and every case it escalated to a person.</dd></div>
+        </dl>
+      </article>
+
+      <article class="sol reveal">
+        <h3>Treasury and spend oversight</h3>
+        <p class="pain">Cash lives across banks and entities, and by the time anyone assembles the full position, it has changed.</p>
+        <dl>
+          <div><dt>What the agent does</dt><dd>Maintains a live cash position across accounts, forecasts short-term needs from payables and receivables, and proposes transfers to keep balances where policy says they should be.</dd></div>
+          <div><dt>What Nien enforces</dt><dd>Proposals only, until you decide otherwise. Any transfer it is ever allowed to make alone is capped, restricted to accounts you own, and subject to the same approval rules as a person.</dd></div>
+          <div><dt>What the owner sees</dt><dd>The position, the forecast, and every proposal with the reasoning attached.</dd></div>
+        </dl>
+      </article>
+    </div>
+
+    <div class="diagram-frame ap-frame reveal">
+      <div class="caption"><span>An invoice's path from inbox to payment under Nien</span></div>
+      <div class="ap" role="img" aria-label="Diagram: an invoice arrives, the AP agent processes it, Nien checks it against the rules, small payments proceed, large ones wait for a human approval, and everything lands on the record.">
+        <div class="node">Invoice arrives<small>email, portal, PDF</small></div>
+        <div class="flow right"><span class="arrow"></span></div>
+        <div class="node">AP agent<small>reads, codes, matches</small></div>
+        <div class="flow right"><span class="arrow"></span></div>
+        <div class="node green">Nien checks rules<small>limits, duplicates, verified account</small></div>
+        <div class="branch" style="grid-column: 6; display:grid; gap:12px;">
+          <div class="flow right"><span class="arrow"></span><span class="flabel">within limit</span></div>
+          <div class="flow right"><span class="arrow"></span><span class="flabel">above limit</span></div>
+        </div>
+        <div class="branch" style="grid-column: 7; display:grid; gap:12px;">
+          <div class="node">Payment released<small>and recorded</small></div>
+          <div class="node">Approver signs off<small>then released and recorded</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CLOSING CTA ============ -->
+<section class="closing" id="contact" aria-labelledby="closing-h" style="border-bottom:none">
+  <div class="wrap">
+    <span class="eyebrow">Next step</span>
+    <h2 class="h2" id="closing-h">Start with the workflow that hurts most.</h2>
+    <p class="lede">Most pilots start with accounts payable in observe mode. You watch what the agent would have done before it does anything.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#contact">Book a demo</a>
+      <a class="btn btn-ghost" href="platform.html">How the platform works</a>
+    </div>
+  </div>
+</section>
