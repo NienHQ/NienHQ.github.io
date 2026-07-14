@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nien — a month of finance ops, on film</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #0b120f;
+    --stage: #0e1613;
+    --card: #131d18;
+    --card-2: #17231d;
+    --line: #22312a;
+    --line-2: #2e4136;
+    --ink: #e9ede8;
+    --ink-soft: #c2ccc4;
+    --muted: #7e8f85;
+    --green: #4a8a75;
+    --green-hi: #8fd0b4;
+    --green-soft: #16281f;
+    --amber: #d9a03c;
+    --amber-soft: #2b2113;
+    --red: #d96c5a;
+    --sans: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
+    --ease: cubic-bezier(.22,.9,.24,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--sans); overflow: hidden;
+    display: grid; place-items: center;
+  }
+  /* ---------- fixed 16:9 stage, scaled to viewport ---------- */
+  #frame { width: 100vw; height: 100vh; display: grid; place-items: center; }
+  #stage {
+    width: 1600px; height: 900px; position: relative; flex: none;
+    background:
+      radial-gradient(1200px 700px at 70% -10%, #14211b 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #101d17 0%, transparent 55%),
+      var(--stage);
+    overflow: hidden; transform-origin: center center;
+    border-radius: 6px;
+  }
+
+  /* ---------- title card ---------- */
+  .cardlayer {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    text-align: center; z-index: 40; background: var(--stage);
+    transition: opacity 1s var(--ease), visibility 1s;
+  }
+  .cardlayer.gone { opacity: 0; visibility: hidden; }
+  .cardlayer .inner { max-width: 900px; padding: 0 40px; }
+  .kicker {
+    font-family: var(--mono); font-size: 15px; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--green-hi); margin-bottom: 30px;
+  }
+  .cardlayer h1 {
+    font-size: 64px; font-weight: 750; letter-spacing: -0.03em; line-height: 1.08;
+  }
+  .cardlayer .sub { margin-top: 26px; font-size: 20px; color: var(--muted); }
+  .fadein { opacity: 0; transform: translateY(16px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+  .fadein.in { opacity: 1; transform: none; }
+
+  /* ---------- start overlay ---------- */
+  #start {
+    position: absolute; inset: 0; z-index: 60; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--bg) 40%, transparent);
+    cursor: pointer; transition: opacity .5s;
+  }
+  #start.gone { opacity: 0; visibility: hidden; }
+  #start .btn {
+    font-family: var(--mono); font-size: 16px; letter-spacing: .14em;
+    color: var(--ink); border: 1px solid var(--line-2); border-radius: 40px;
+    padding: 18px 40px; background: var(--card);
+  }
+
+  /* ---------- app chrome ---------- */
+  #app {
+    position: absolute; inset: 0; padding: 26px 30px 30px;
+    display: flex; flex-direction: column; gap: 18px;
+    opacity: 0; transition: opacity 1s var(--ease);
+  }
+  #app.in { opacity: 1; }
+  #topbar { display: flex; align-items: center; gap: 20px; }
+  #topbar .brand {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 700; font-size: 19px; letter-spacing: -0.02em;
+  }
+  #topbar .brand img { width: 28px; height: 28px; border-radius: 7px; }
+  #topbar .mode {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--green-hi); border: 1px solid var(--line-2); border-radius: 30px; padding: 7px 16px;
+    background: var(--green-soft);
+  }
+  #timeline { margin-left: auto; display: flex; align-items: center; gap: 14px; width: 460px; }
+  #timeline .mo { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .1em; }
+  #tl-track { flex: 1; height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  #tl-fill { height: 100%; width: 0%; background: var(--green-hi); border-radius: 4px; transition: width 1.4s var(--ease); }
+
+  #cols { flex: 1; display: grid; grid-template-columns: 380px 1fr 430px; gap: 18px; min-height: 0; }
+  .col {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  }
+  .col .cap {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); display: flex; justify-content: space-between; align-items: center;
+  }
+  .col .cap .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-hi); box-shadow: 0 0 10px var(--green-hi); }
+
+  /* ---------- inbox ---------- */
+  #maillist { padding: 10px 12px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+  .mail {
+    border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px;
+    background: var(--card-2); opacity: 0; transform: translateX(-24px);
+    transition: opacity .5s var(--ease), transform .5s var(--ease), border-color .4s, background .4s;
+  }
+  .mail.in { opacity: 1; transform: none; }
+  .mail.active { border-color: var(--green); background: var(--green-soft); }
+  .mail.dim { opacity: .45; }
+  .mail .row1 { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .mail .from { font-weight: 600; color: var(--ink-soft); }
+  .mail .subj { margin-top: 4px; font-size: 14.5px; font-weight: 550; }
+  .mail .att {
+    display: inline-block; margin-top: 8px; font-family: var(--mono); font-size: 10.5px;
+    color: var(--ink-soft); background: var(--card); border: 1px solid var(--line-2);
+    padding: 3px 9px; border-radius: 5px;
+  }
+  .mail .unread { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green-hi); margin-right: 7px; }
+
+  /* ---------- document viewer ---------- */
+  #docwrap { flex: 1; position: relative; padding: 22px; display: grid; place-items: center; min-height: 0; }
+  .doc {
+    width: 620px; background: #f4f2ea; color: #262b27; border-radius: 8px;
+    padding: 34px 38px; font-size: 14px; position: relative;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.65);
+    opacity: 0; transform: translateY(34px) scale(.96);
+    transition: opacity .6s var(--ease), transform .6s var(--ease);
+  }
+  .doc.in { opacity: 1; transform: none; }
+  .doc.out { opacity: 0; transform: translateY(-26px) scale(.97); }
+  .doc .dhead { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #262b27; padding-bottom: 14px; }
+  .doc .dhead .co { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  .doc .dhead .dtype { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6b7268; }
+  .doc .meta { display: flex; gap: 34px; margin-top: 16px; font-size: 12.5px; color: #565d55; }
+  .doc .meta b { display: block; color: #262b27; font-size: 13.5px; margin-top: 2px; font-weight: 650; }
+  .doc table { width: 100%; margin-top: 22px; border-collapse: collapse; font-size: 13px; }
+  .doc th { text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #6b7268; padding: 0 0 8px; border-bottom: 1px solid #d8d4c6; }
+  .doc td { padding: 9px 0; border-bottom: 1px solid #e6e2d4; }
+  .doc td:last-child, .doc th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .doc .total td { border-bottom: none; font-weight: 750; font-size: 15px; padding-top: 14px; }
+  .doc .foot { margin-top: 20px; font-size: 11.5px; color: #6b7268; }
+  .hl { position: relative; border-radius: 3px; }
+  .hl::after {
+    content: ""; position: absolute; inset: -3px -6px; border-radius: 5px;
+    background: color-mix(in srgb, #4a8a75 26%, transparent);
+    border: 1.5px solid #4a8a75; opacity: 0; transform: scale(1.12);
+    transition: opacity .35s var(--ease), transform .35s var(--ease);
+  }
+  .hl.on::after { opacity: 1; transform: none; }
+  .hl.warn::after { background: color-mix(in srgb, #c98a2b 24%, transparent); border-color: #c98a2b; }
+
+  /* scanner */
+  #scan {
+    position: absolute; left: 0; right: 0; height: 120px; top: -140px; opacity: 0; pointer-events: none;
+    background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--green-hi) 16%, transparent) 55%, var(--green-hi) 99%, transparent 100%);
+  }
+  .doc .scanline { position: absolute; left: 0; right: 0; top: 0; height: 0; overflow: visible; pointer-events: none; }
+
+  /* stamps */
+  .stamp {
+    position: absolute; z-index: 5; left: 50%; top: 44%;
+    transform: translate(-50%,-50%) rotate(-9deg) scale(2.6); opacity: 0;
+    font-family: var(--mono); font-weight: 800; font-size: 34px; letter-spacing: .12em;
+    color: var(--green); border: 4px solid var(--green); border-radius: 10px;
+    padding: 10px 26px; background: color-mix(in srgb, #f4f2ea 88%, transparent);
+    transition: opacity .18s ease-out, transform .18s ease-out;
+  }
+  .stamp.on { opacity: 1; transform: translate(-50%,-50%) rotate(-9deg) scale(1); }
+  .stamp.amber { color: #a06c10; border-color: #a06c10; }
+  .stamp.red { color: #b23c28; border-color: #b23c28; }
+
+  /* statement rows (montage) */
+  .sheet {
+    width: 640px; background: var(--card-2); border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden; opacity: 0; transform: translateY(30px);
+    transition: opacity .6s var(--ease), transform .6s var(--ease);
+  }
+  .sheet.in { opacity: 1; transform: none; }
+  .sheet.out { opacity: 0; transform: translateY(-24px); }
+  .sheet .shead {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+  .srow {
+    display: grid; grid-template-columns: 84px 1fr 110px 30px; gap: 12px; align-items: center;
+    padding: 8px 20px; font-size: 13px; border-bottom: 1px solid var(--line);
+    color: var(--ink-soft); opacity: 0; transform: translateX(-10px);
+    transition: opacity .25s, transform .25s, background .3s;
+  }
+  .srow.in { opacity: 1; transform: none; }
+  .srow .d { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .srow .amt { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; }
+  .srow .tick { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; transform: scale(0); transition: transform .25s var(--ease); }
+  .srow .tick.ok { background: var(--green-soft); color: var(--green-hi); }
+  .srow .tick.warn { background: var(--amber-soft); color: var(--amber); }
+  .srow .tick.bad { background: #2b1713; color: var(--red); }
+  .srow .tick.show { transform: scale(1); }
+  .srow.flag { background: var(--amber-soft); }
+  .srow.bad { background: #241310; }
+
+  /* ---------- agent panel ---------- */
+  #counters { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+  .ctr { padding: 14px 8px 12px; text-align: center; border-right: 1px solid var(--line); }
+  .ctr:last-child { border-right: none; }
+  .ctr .v { font-size: 24px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; transition: color .3s; }
+  .ctr .v.bump { animation: bump .45s var(--ease); }
+  .ctr .v.money { color: var(--green-hi); }
+  @keyframes bump { 30% { transform: scale(1.22); } }
+  .ctr .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+  #feed { flex: 1; padding: 12px 14px; overflow: hidden; display: flex; flex-direction: column; gap: 9px; justify-content: flex-end; }
+  .fcard {
+    border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 10px;
+    background: var(--card-2); padding: 12px 15px; opacity: 0; transform: translateY(18px);
+    transition: opacity .5s var(--ease), transform .5s var(--ease);
+  }
+  .fcard.in { opacity: 1; transform: none; }
+  .fcard.warn { border-left-color: var(--amber); }
+  .fcard.bad { border-left-color: var(--red); }
+  .fcard .fb {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  }
+  .fcard .badge { font-weight: 800; padding: 2px 9px; border-radius: 4px; background: var(--green); color: #08110d; letter-spacing: .08em; }
+  .fcard.warn .badge { background: var(--amber); }
+  .fcard.bad .badge { background: var(--red); }
+  .fcard .ft { margin-top: 7px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+  .fcard .ft strong { color: var(--ink); font-weight: 650; }
+  .fcard .ev {
+    margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted);
+    border-left: 2px solid var(--line-2); padding: 5px 10px; background: var(--card); border-radius: 0 6px 6px 0;
+  }
+  .fcard .vch { margin-top: 8px; font-family: var(--mono); font-size: 11.5px; display: grid; gap: 3px; }
+  .fcard .vch div { display: flex; justify-content: space-between; color: var(--ink-soft); }
+  .fcard .vch .amt { color: var(--green-hi); }
+  .type-caret::after { content: "▍"; color: var(--green-hi); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---------- chapter lower third ---------- */
+  #chapter {
+    position: absolute; left: 50%; bottom: 46px; transform: translate(-50%, 20px);
+    background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(8px);
+    border: 1px solid var(--line-2); border-radius: 40px; padding: 12px 30px;
+    font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+    opacity: 0; transition: opacity .6s var(--ease), transform .6s var(--ease);
+    z-index: 20; white-space: nowrap;
+  }
+  #chapter.in { opacity: 1; transform: translate(-50%, 0); }
+  #chapter .wk { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--green-hi); margin-right: 14px; }
+
+  /* ---------- finale ---------- */
+  #finale .grid { display: grid; grid-template-columns: repeat(2, 380px); gap: 26px 60px; margin-top: 50px; text-align: left; }
+  #finale .cell { border-top: 1px solid var(--line-2); padding-top: 20px; }
+  #finale .big { font-size: 56px; font-weight: 750; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--green-hi); }
+  #finale .cell p { margin-top: 8px; font-size: 15px; color: var(--muted); line-height: 1.5; }
+  #endcard img { width: 76px; height: 76px; border-radius: 18px; margin-bottom: 34px; }
+  #endcard h1 { font-size: 54px; }
+  #endcard .sub2 { margin-top: 20px; font-size: 22px; color: var(--ink-soft); }
+  #endcard .url { margin-top: 44px; font-family: var(--mono); font-size: 15px; letter-spacing: .12em; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="stage">
+
+    <div id="app">
+      <div id="topbar">
+        <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==" alt="">Nien</div>
+        <div class="mode">shadow mode · parallel books</div>
+        <div id="timeline">
+          <span class="mo">JUN 01</span>
+          <div id="tl-track"><div id="tl-fill"></div></div>
+          <span class="mo">JUN 30</span>
+        </div>
+      </div>
+      <div id="cols">
+        <div class="col">
+          <div class="cap"><span>finance@meridian — inbox</span><span class="dot"></span></div>
+          <div id="maillist"></div>
+        </div>
+        <div class="col" style="background:transparent;border:none;">
+          <div id="docwrap"></div>
+        </div>
+        <div class="col">
+          <div class="cap"><span>Nien · books agent</span><span id="cap-day">JUN 2026</span></div>
+          <div id="counters">
+            <div class="ctr"><div class="v" id="c-entries">0</div><div class="k">entries</div></div>
+            <div class="ctr"><div class="v" id="c-docs">0</div><div class="k">docs read</div></div>
+            <div class="ctr"><div class="v" id="c-human">0</div><div class="k">to people</div></div>
+            <div class="ctr"><div class="v money" id="c-kept">$0</div><div class="k">kept</div></div>
+          </div>
+          <div id="feed"></div>
+        </div>
+      </div>
+      <div id="chapter"><span class="wk" id="ch-wk"></span><span id="ch-t"></span></div>
+    </div>
+
+    <div class="cardlayer" id="title">
+      <div class="inner">
+        <div class="kicker fadein" id="t-k">Meridian Staffing · June 2026</div>
+        <h1 class="fadein" id="t-h">A month of finance ops,<br>run by agents.</h1>
+        <p class="sub fadein" id="t-s">Fictional company. Synthetic mail. The motion is the real product.</p>
+      </div>
+    </div>
+
+    <div class="cardlayer gone" id="finale">
+      <div class="inner" style="max-width:1000px;">
+        <div class="kicker fadein" id="f-k">Month-end</div>
+        <h1 class="fadein" id="f-h" style="font-size:52px;">The close was a review,<br>not an excavation.</h1>
+        <div class="grid">
+          <div class="cell fadein"><div class="big" id="f-1">0</div><p>double-entry vouchers posted to the parallel books — every one traced to a source document.</p></div>
+          <div class="cell fadein"><div class="big" id="f-2">0h</div><p>of human work absorbed. The team touched only judgment: approvals, exceptions, sign-offs.</p></div>
+          <div class="cell fadein"><div class="big" id="f-3">$0</div><p>caught before it left — a duplicate invoice and an inflated card charge.</p></div>
+          <div class="cell fadein"><div class="big" id="f-4">2</div><p>differences against Meridian's own books. Both explained. One was Meridian's error.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cardlayer gone" id="endcard">
+      <div class="inner">
+        <img class="fadein" id="e-l" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==" alt="Nien">
+        <h1 class="fadein" id="e-h">Agents that run<br>your finance ops.</h1>
+        <p class="sub2 fadein" id="e-s">They keep your books in parallel until the numbers prove them.<br>The pilot is a mail rule.</p>
+        <div class="url fadein" id="e-u">nienhq.github.io</div>
+      </div>
+    </div>
+
+    <div id="start"><div class="btn">▶ &nbsp;PLAY — 90 SECONDS</div></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var qs = new URLSearchParams(location.search);
+
+  // ---- stage scaling ----
+  function fit() {
+    var s = Math.min(innerWidth / 1600, innerHeight / 900);
+    $("stage").style.transform = "scale(" + s + ")";
+  }
+  addEventListener("resize", fit); fit();
+
+  var sleepMul = qs.get("fast") ? 0.25 : 1;
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms * sleepMul); }); }
+
+  // ---- counters ----
+  var C = { entries: 0, docs: 0, human: 0, kept: 0 };
+  function bump(id, val) {
+    var el = $(id); el.textContent = val;
+    el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+  }
+  function add(k, n) {
+    C[k] += n;
+    if (k === "kept") bump("c-kept", "$" + C.kept.toLocaleString());
+    else bump("c-" + k, C[k]);
+  }
+  function countTo(el, to, dur, fmt) {
+    var t0 = performance.now();
+    function frame(t) {
+      var p = Math.min(1, (t - t0) / dur); p = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(to * p));
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---- chrome helpers ----
+  function day(d, pct) {
+    $("cap-day").textContent = "JUN " + ("0" + d).slice(-2);
+    $("tl-fill").style.width = pct + "%";
+  }
+  async function chapter(wk, t) {
+    var c = $("chapter");
+    c.classList.remove("in"); await sleep(350);
+    $("ch-wk").textContent = wk; $("ch-t").textContent = t;
+    c.classList.add("in");
+  }
+  function mail(from, subj, att, d) {
+    var m = document.createElement("div");
+    m.className = "mail";
+    m.innerHTML = '<div class="row1"><span class="from"><span class="unread"></span>' + from + "</span><span>Jun " + d + "</span></div>" +
+      '<div class="subj">' + subj + "</div>" + (att ? '<span class="att">' + att + "</span>" : "");
+    var list = $("maillist");
+    list.appendChild(m);
+    while (list.children.length > 6) list.removeChild(list.firstChild);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { m.classList.add("in"); }); });
+    return m;
+  }
+  function activate(m) {
+    document.querySelectorAll(".mail").forEach(function (x) { x.classList.remove("active"); x.classList.add("dim"); });
+    m.classList.remove("dim"); m.classList.add("active");
+    var u = m.querySelector(".unread"); if (u) u.remove();
+  }
+  function fcard(kind, badge, txt, ev, vch) {
+    var c = document.createElement("div");
+    c.className = "fcard" + (kind ? " " + kind : "");
+    var h = '<div class="fb"><span>books agent</span><span class="badge">' + badge + "</span></div>" +
+      '<div class="ft">' + txt + "</div>";
+    if (ev) h += '<div class="ev">' + ev + "</div>";
+    if (vch) h += '<div class="vch">' + vch.map(function (l) {
+      return "<div><span>" + l[0] + "</span><span class=\"amt\">" + l[1] + "</span></div>";
+    }).join("") + "</div>";
+    c.innerHTML = h;
+    var f = $("feed");
+    f.appendChild(c);
+    while (f.children.length > 4) f.removeChild(f.firstChild);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { c.classList.add("in"); }); });
+    return c;
+  }
+  async function typeInto(el, text, cps) {
+    el.classList.add("type-caret");
+    for (var i = 0; i <= text.length; i++) {
+      el.textContent = text.slice(0, i);
+      await sleep(1000 / cps);
+    }
+    el.classList.remove("type-caret");
+  }
+
+  // ---- documents ----
+  function invoiceDoc(co, num, dateStr, rows, total, foot) {
+    var d = document.createElement("div");
+    d.className = "doc";
+    d.innerHTML =
+      '<div class="dhead"><span class="co">' + co + '</span><span class="dtype">Invoice</span></div>' +
+      '<div class="meta"><span>Invoice №<b>' + num + "</b></span><span>Date<b>" + dateStr + '</b></span><span>Bill to<b>Meridian Staffing LLC</b></span></div>' +
+      "<table><tr><th>Description</th><th>Amount</th></tr>" +
+      rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") +
+      '<tr class="total"><td>Total due</td><td><span class="hl" data-h="total">' + total + "</span></td></tr></table>" +
+      (foot ? '<div class="foot">' + foot + "</div>" : "");
+    return d;
+  }
+  async function showDoc(d) {
+    var w = $("docwrap");
+    var old = w.querySelector(".doc, .sheet");
+    if (old) { old.classList.add("out"); await sleep(420); old.remove(); }
+    w.appendChild(d);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { d.classList.add("in"); }); });
+    await sleep(650);
+    return d;
+  }
+  async function scanDoc(d) {
+    var s = document.createElement("div");
+    s.style.cssText = "position:absolute;left:-6px;right:-6px;height:90px;top:-100px;pointer-events:none;border-radius:8px;" +
+      "background:linear-gradient(to bottom,transparent,rgba(143,208,180,.22) 60%,rgba(143,208,180,.85) 99%,transparent);" +
+      "transition:top 1.15s linear;";
+    d.appendChild(s);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { s.style.top = d.offsetHeight + "px"; }); });
+    await sleep(1250);
+    s.remove();
+  }
+  async function hl(d, sel, warn) {
+    var el = typeof sel === "string" ? d.querySelector(sel) : sel;
+    if (!el) return;
+    if (warn) el.classList.add("warn");
+    el.classList.add("on");
+    await sleep(420);
+  }
+  async function stamp(d, text, cls) {
+    var s = document.createElement("div");
+    s.className = "stamp" + (cls ? " " + cls : "");
+    s.textContent = text;
+    d.appendChild(s);
+    await sleep(60);
+    s.classList.add("on");
+    await sleep(200);
+  }
+
+  // =======================================================
+  // THE FILM
+  // =======================================================
+  async function film() {
+    // -- title --
+    await sleep(500);
+    $("t-k").classList.add("in"); await sleep(700);
+    $("t-h").classList.add("in"); await sleep(1200);
+    $("t-s").classList.add("in"); await sleep(2400);
+    $("title").classList.add("gone");
+    $("app").classList.add("in");
+    await sleep(1000);
+
+    // ---------------- SCENE 1: ordinary invoice ----------------
+    await chapter("Week 1", "An ordinary invoice, start to finish");
+    day(2, 6);
+    var m1 = mail("billing@cloudsuite.io", "CloudSuite — Invoice INV-8841 (June)", "invoice.pdf", 2);
+    await sleep(1400); activate(m1);
+    var d1 = invoiceDoc("CloudSuite", '<span class="hl" data-h="num">INV-8841</span>',
+      '<span class="hl" data-h="date">Jun 01, 2026</span>',
+      [["CRM subscription — <span class='hl' data-h='period'>June 2026</span>, 40 seats", "$1,890.00"]],
+      "$1,890.00", "Payment terms: net 15 · account on file");
+    await showDoc(d1);
+    await scanDoc(d1); add("docs", 1);
+    await hl(d1, '[data-h="num"]'); await hl(d1, '[data-h="period"]'); await hl(d1, '[data-h="total"]');
+    fcard("", "READ", "Invoice <strong>INV-8841</strong> · CloudSuite · <strong>$1,890.00</strong> · June subscription.",
+      "matches contract rate agreed Nov 2025 · 7 prior payments, same amount");
+    await sleep(1700);
+    fcard("", "POSTED", "Posted to the parallel books. A person's <strong>12 minutes</strong> — open, check, enter, file — took the agent none of anyone's.",
+      null, [["Dr · Software subscriptions", "1,890.00"], ["Cr · AP · CloudSuite", "1,890.00"]]);
+    add("entries", 1);
+    await sleep(2300);
+
+    // ---------------- SCENE 2: duplicate catch ----------------
+    await chapter("Week 1", "The invoice you already paid");
+    day(5, 15);
+    var m2 = mail("accounts@deskworks.co", "DeskWorks lease — Invoice DW-3307", "invoice.pdf", 5);
+    await sleep(1400); activate(m2);
+    var d2 = invoiceDoc("DeskWorks", '<span class="hl" data-h="num">DW-3307</span>',
+      "Jun 04, 2026",
+      [["Office lease — <span class='hl' data-h='period'>May–Jun period</span>", "$2,150.00"]],
+      "$2,150.00", "Kindly process at the earliest.");
+    await showDoc(d2);
+    await scanDoc(d2); add("docs", 1);
+    await hl(d2, '[data-h="period"]', true); await hl(d2, '[data-h="total"]', true);
+    fcard("warn", "CHECKING", "Same amount, same lease period as <strong>DW-3291</strong>… which was <strong>paid May 8</strong>.",
+      "DW-3291 · $2,150.00 · paid 2026-05-08 · new number, same bill");
+    await sleep(1900);
+    await stamp(d2, "DUPLICATE", "red");
+    await sleep(900);
+    fcard("bad", "CAUGHT", "<strong>Not posted.</strong> Written back to the vendor; flagged to Meridian. The person who was supposed to remember this was on leave.");
+    add("kept", 2150); add("human", 1);
+    await sleep(2600);
+
+    // ---------------- SCENE 3: card statement montage ----------------
+    await chapter("Week 2", "34 card lines, one pass");
+    day(12, 40);
+    var m3 = mail("statements@card", "Corporate card — June cycle", "statement · 34 lines", 12);
+    await sleep(1300); activate(m3);
+    var sheet = document.createElement("div");
+    sheet.className = "sheet";
+    sheet.innerHTML = '<div class="shead"><span>corporate card · june cycle</span><span>34 lines</span></div>';
+    var LINES = [
+      ["Jun 02", "Uber — client visit, Northwind site", "$24.60", "ok"],
+      ["Jun 03", "AWS", "$1,204.11", "ok"],
+      ["Jun 04", "Figma", "$180.00", "ok"],
+      ["Jun 05", "Uber", "$19.20", "ok"],
+      ["Jun 06", "Cafe Aroma — team lunch", "$86.40", "ok"],
+      ["Jun 08", "Zoom", "$219.90", "ok"],
+      ["Jun 09", "Office supplies — Staples", "$64.75", "warn"],
+      ["Jun 10", "Meridian Air — travel", "$210.00", "bad"],
+      ["Jun 10", "Hotel Crestline", "$412.00", "ok"],
+      ["Jun 11", "GitHub", "$252.00", "ok"],
+      ["Jun 11", "Notion", "$96.00", "ok"],
+      ["Jun 12", "Uber", "$31.85", "ok"],
+    ];
+    LINES.forEach(function (l) {
+      var r = document.createElement("div");
+      r.className = "srow";
+      r.innerHTML = '<span class="d">' + l[0] + "</span><span>" + l[1] + '</span><span class="amt">' + l[2] +
+        '</span><span class="tick ' + l[3] + '">' + (l[3] === "ok" ? "✓" : l[3] === "warn" ? "?" : "!") + "</span>";
+      sheet.appendChild(r);
+    });
+    await showDoc(sheet);
+    var rows = sheet.querySelectorAll(".srow");
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].classList.add("in");
+      await sleep(150);
+      rows[i].querySelector(".tick").classList.add("show");
+      var kind = LINES[i][3];
+      if (kind === "warn") rows[i].classList.add("flag");
+      if (kind === "bad") rows[i].classList.add("bad");
+      await sleep(90);
+    }
+    add("docs", 35); add("entries", 31);
+    fcard("", "MATCHED", "<strong>31 of 34</strong> lines matched to receipts already read from email, posted in one pass. 40 minutes of squinting, absorbed.");
+    await sleep(1800);
+    fcard("warn", "MISMATCH", "Travel receipt reads <strong>$150</strong>; the card was charged <strong>$210</strong>. Exception raised with both documents attached.",
+      "receipt_0610.jpg: $150.00 · statement line 8: $210.00");
+    add("kept", 60); add("human", 3);
+    await sleep(2600);
+
+    // ---------------- SCENE 4: unapproved timesheet ----------------
+    await chapter("Week 2", "No approval, no payroll");
+    day(11, 36);
+    var m4 = mail("dev.k@meridian", "Timesheet — June (Dev K.)", "timesheet.xlsx", 11);
+    await sleep(1300); activate(m4);
+    var d4 = document.createElement("div");
+    d4.className = "doc";
+    d4.innerHTML =
+      '<div class="dhead"><span class="co">Timesheet — June</span><span class="dtype">Payroll input</span></div>' +
+      '<div class="meta"><span>Employee<b>Dev K. · consultant</b></span><span>Days claimed<b><span class="hl" data-h="days">23</span></b></span><span>Client<b>Atlas Retail</b></span></div>' +
+      '<table><tr><th>Check</th><th>Status</th></tr>' +
+      '<tr><td>Rate on file</td><td>✓ found</td></tr>' +
+      '<tr><td>Roster match</td><td>✓ deployed, Atlas Retail</td></tr>' +
+      '<tr><td>Manager approval</td><td><span class="hl" data-h="appr">— none on thread</span></td></tr></table>';
+    await showDoc(d4);
+    await scanDoc(d4); add("docs", 1);
+    await hl(d4, '[data-h="days"]');
+    await hl(d4, '[data-h="appr"]', true);
+    await sleep(600);
+    await stamp(d4, "HELD", "amber");
+    var qc = fcard("warn", "QUESTION", "Not staged. Drafting a written question — the agents never guess:");
+    var q = document.createElement("div");
+    q.className = "ev"; qc.appendChild(q);
+    await typeInto(q, "Hi Rohit — Dev K.'s June timesheet (23 days) has no approval on the thread. Approve or amend before the 18th payroll run?", 42);
+    add("human", 1);
+    await sleep(1800);
+
+    // ---------------- SCENE 5: bank-detail change ----------------
+    await chapter("Week 3", "The oldest trick in accounts payable");
+    day(17, 60);
+    var m5 = mail("accounts@vertex-supplies.com", "Invoice #5512 + updated bank details", "invoice.pdf", 17);
+    await sleep(1400); activate(m5);
+    var d5 = invoiceDoc("Vertex Supplies", "5512", "Jun 16, 2026",
+      [["Networking hardware — PO-2231", "$8,940.00"],
+       ["<b>Please note our updated account:</b> <span class='hl' data-h='bank'>IBAN ····· 7 7 4 2</span>", ""]],
+      "$8,940.00", "We have recently changed banks. Kindly remit to the new account.");
+    await showDoc(d5);
+    await scanDoc(d5); add("docs", 1);
+    await hl(d5, '[data-h="bank"]', true);
+    fcard("warn", "PROVENANCE", "Sender authentication passes — but the beneficiary account differs from <strong>11 prior payments</strong> to this vendor.",
+      "rule: bank-detail change ⇒ hold for callback verification");
+    await sleep(2000);
+    await stamp(d5, "PAYMENT BLOCKED", "red");
+    fcard("bad", "HELD", "<strong>No payment moves</strong> until a person confirms by phone on the number on file — not the one in the email. This is how invoice fraud gets in.");
+    add("human", 1);
+    await sleep(2700);
+
+    // ---------------- SCENE 6: payroll ----------------
+    await chapter("Week 3", "Payroll, computed from evidence");
+    day(18, 66);
+    var m6 = mail("books agent", "Payroll run — June (computed)", "journal · 38 employees", 18);
+    await sleep(1300); activate(m6);
+    var d6 = document.createElement("div");
+    d6.className = "sheet";
+    d6.innerHTML = '<div class="shead"><span>payroll journal · june</span><span>38 employees</span></div>';
+    var PR = [
+      ["approved timesheets", "38 / 38", "ok"],
+      ["rates from contracts on file", "38 matched", "ok"],
+      ["late approval (Dev K.) — resolved Jun 26", "included", "ok"],
+      ["gross payroll", "$84,300.00", "ok"],
+    ];
+    PR.forEach(function (l) {
+      var r = document.createElement("div");
+      r.className = "srow";
+      r.style.gridTemplateColumns = "1fr 150px 30px";
+      r.innerHTML = "<span>" + l[0] + '</span><span class="amt">' + l[1] + '</span><span class="tick ok">✓</span>';
+      d6.appendChild(r);
+    });
+    await showDoc(d6);
+    var prow = d6.querySelectorAll(".srow");
+    for (var j = 0; j < prow.length; j++) {
+      prow[j].classList.add("in"); await sleep(320);
+      prow[j].querySelector(".tick").classList.add("show"); await sleep(160);
+    }
+    add("entries", 38);
+    fcard("", "STAGED", "Journal staged: <strong>$84,300</strong>. It pays out only when the named approvers sign — the agents do the assembly, people hold the pen.",
+      null, [["Dr · Salaries & consultant costs", "84,300.00"], ["Cr · Salaries payable", "84,300.00"]]);
+    add("human", 1);
+    await sleep(2600);
+
+    // ---------------- SCENE 7: month-end sweep ----------------
+    await chapter("Week 4", "…and everything in between");
+    day(30, 100);
+    var quick = [
+      ["MATCHED", "", "Northwind's <strong>$18,400</strong> landed — applied to INV-2093, on time."],
+      ["DRAFTED", "", "Two client invoice cycles — <strong>$99,000</strong> across 4 drafts — queued for sign-off."],
+      ["RESOLVED", "", "Vendor conceded a 5% credit on the disputed line. Credit note linked to the thread that settled it."],
+    ];
+    for (var k = 0; k < quick.length; k++) {
+      fcard(quick[k][1], quick[k][0], quick[k][2]);
+      add("entries", k === 1 ? 4 : 12); add("docs", 6);
+      await sleep(1150);
+    }
+    add("entries", 13); add("docs", 22); add("human", 8);
+    await sleep(1400);
+
+    // ---------------- FINALE ----------------
+    $("app").classList.remove("in");
+    await sleep(1100);
+    var f = $("finale"); f.classList.remove("gone");
+    $("f-k").classList.add("in"); await sleep(500);
+    $("f-h").classList.add("in"); await sleep(900);
+    document.querySelectorAll("#finale .cell").forEach(function (c, i) {
+      setTimeout(function () { c.classList.add("in"); }, i * 350);
+    });
+    await sleep(700);
+    countTo($("f-1"), 99, 1600, function (n) { return n; });
+    countTo($("f-2"), 31, 1600, function (n) { return n + "h"; });
+    countTo($("f-3"), 2210, 1600, function (n) { return "$" + n.toLocaleString(); });
+    await sleep(5200);
+
+    // ---------------- END CARD ----------------
+    f.classList.add("gone");
+    await sleep(900);
+    var e = $("endcard"); e.classList.remove("gone");
+    $("e-l").classList.add("in"); await sleep(600);
+    $("e-h").classList.add("in"); await sleep(1000);
+    $("e-s").classList.add("in"); await sleep(900);
+    $("e-u").classList.add("in");
+    await sleep(4500);
+
+    if (qs.get("loop")) location.reload();
+  }
+
+  function begin() {
+    $("start").classList.add("gone");
+    film();
+  }
+  $("start").addEventListener("click", begin);
+  addEventListener("keydown", function (ev) {
+    if (ev.key === " ") { ev.preventDefault(); if (!$("start").classList.contains("gone")) begin(); }
+    if (ev.key === "r" || ev.key === "R") location.reload();
+  });
+  if (qs.get("autoplay")) setTimeout(begin, 800);
+})();
+</script>
+</body>
+</html>
