@@ -1,0 +1,1753 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nien — Meridian Staffing, June 2026 · explorable demo</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #0b120f;
+    --stage: #0e1613;
+    --card: #131d18;
+    --card-2: #17231d;
+    --line: #22312a;
+    --line-2: #2e4136;
+    --ink: #e9ede8;
+    --ink-soft: #c2ccc4;
+    --muted: #7e8f85;
+    --green: #4a8a75;
+    --green-hi: #8fd0b4;
+    --green-soft: #16281f;
+    --amber: #d9a03c;
+    --amber-soft: #2b2113;
+    --red: #d96c5a;
+    --red-soft: #2b1713;
+    --sans: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
+    --ease: cubic-bezier(.22,.9,.24,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    display: flex; flex-direction: column; overflow: hidden; font-size: 14px;
+  }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  a { color: var(--green-hi); }
+
+  /* ---------- header ---------- */
+  #top {
+    display: flex; align-items: center; gap: 14px; padding: 10px 18px;
+    border-bottom: 1px solid var(--line); background: var(--stage); flex: none; flex-wrap: wrap;
+  }
+  #top .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+  #top .brand img { width: 26px; height: 26px; border-radius: 6px; }
+  #top .mode {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--green-hi); border: 1px solid var(--line-2); border-radius: 30px; padding: 6px 13px;
+    background: var(--green-soft); white-space: nowrap;
+  }
+  #tabs { display: flex; gap: 4px; margin-left: 10px; }
+  #tabs button {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); padding: 8px 14px; border-radius: 8px; border: 1px solid transparent;
+    transition: color .25s, background .25s;
+  }
+  #tabs button:hover { color: var(--ink-soft); }
+  #tabs button.on { color: var(--green-hi); background: var(--green-soft); border-color: var(--line-2); }
+  #tabs button .n {
+    display: inline-block; min-width: 17px; text-align: center; margin-left: 6px;
+    background: var(--amber); color: #171106; border-radius: 8px; font-size: 10px; padding: 1px 4px; font-weight: 700;
+  }
+  #top .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  #btn-tour {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2);
+    color: var(--muted); font-family: var(--mono); font-size: 14px; background: var(--card);
+  }
+  #btn-tour:hover { color: var(--green-hi); border-color: var(--green); }
+  #top .demo-link {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: #08110d; background: var(--green-hi); border-radius: 8px; padding: 8px 14px; text-decoration: none; font-weight: 700;
+  }
+
+  /* ---------- views ---------- */
+  main { flex: 1; min-height: 0; }
+  .view { display: none; height: 100%; }
+  .view.on { display: block; }
+  #view-inbox.on { display: grid; grid-template-columns: 330px minmax(0,1fr) 400px; }
+  .pane { min-height: 0; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+  .pane:last-child { border-right: none; }
+  .cap {
+    padding: 11px 16px; border-bottom: 1px solid var(--line); flex: none;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .cap .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-hi); box-shadow: 0 0 10px var(--green-hi); flex: none; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+  /* ---------- thread list ---------- */
+  #threads { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .thread {
+    text-align: left; border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px;
+    background: var(--card); transition: border-color .25s, background .25s; width: 100%;
+  }
+  .thread:hover { border-color: var(--line-2); }
+  .thread.active { border-color: var(--green); background: var(--green-soft); }
+  .thread .row1 { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--muted); }
+  .thread .from { font-weight: 600; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .thread .date { font-family: var(--mono); font-size: 10.5px; flex: none; }
+  .thread .subj { margin-top: 4px; font-size: 13px; font-weight: 550; line-height: 1.35; color: var(--ink-soft); }
+  .thread.unread .subj { color: var(--ink); font-weight: 650; }
+  .thread .udot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green-hi); margin-right: 7px; flex: none; }
+  .thread .row2 { margin-top: 6px; display: flex; gap: 6px; align-items: center; }
+  .thread .att-mini { font-family: var(--mono); font-size: 9.5px; color: var(--muted); border: 1px solid var(--line-2); padding: 2px 7px; border-radius: 4px; }
+
+  .badge {
+    display: inline-block; font-family: var(--mono); font-size: 9px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+  }
+  .badge.caught, .badge.blocked { background: var(--red); color: #170a07; }
+  .badge.held, .badge.mismatch { background: var(--amber); color: #171106; }
+  .badge.resolved, .badge.posted { background: var(--green); color: #08110d; }
+
+  /* ---------- message pane ---------- */
+  #msghead { padding: 14px 20px 12px; border-bottom: 1px solid var(--line); flex: none; }
+  #msghead h2 { font-size: 16.5px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.3; }
+  #msghead .meta { margin-top: 5px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+  #msgs { padding: 16px 20px 30px; display: flex; flex-direction: column; gap: 12px; }
+  #empty { display: grid; place-items: center; height: 100%; color: var(--muted); font-size: 13px; }
+  #empty .inner { text-align: center; }
+  #empty .k { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+  .msg { border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow: hidden; }
+  .msg .mhead { padding: 11px 16px; display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); font-size: 12px; }
+  .msg .mfrom { font-weight: 650; color: var(--ink); }
+  .msg .mfrom span { font-weight: 400; color: var(--muted); font-family: var(--mono); font-size: 10.5px; margin-left: 6px; }
+  .msg .mdate { font-family: var(--mono); font-size: 10.5px; color: var(--muted); flex: none; }
+  .msg .mto { padding: 6px 16px 0; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .msg .mbody { padding: 12px 16px 14px; font-size: 13.5px; line-height: 1.6; color: var(--ink-soft); }
+  .msg .mbody p { margin: 0 0 10px; }
+  .msg .mbody p:last-child { margin-bottom: 0; }
+  .msg .mbody .sig { color: var(--muted); font-size: 12.5px; }
+  .qbtn {
+    margin: 2px 16px 12px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    color: var(--muted); border: 1px solid var(--line-2); border-radius: 5px; padding: 3px 10px;
+  }
+  .qbtn:hover { color: var(--ink-soft); }
+  .quoted { display: none; margin: 0 16px 14px; padding: 10px 14px; border-left: 2px solid var(--line-2); color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+  .quoted.open { display: block; }
+  .quoted p { margin: 0 0 8px; }
+  .attchip {
+    display: inline-flex; align-items: center; gap: 8px; margin: 0 16px 14px;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-soft);
+    background: var(--card-2); border: 1px solid var(--line-2); padding: 7px 12px; border-radius: 7px;
+    transition: border-color .25s, color .25s;
+  }
+  .attchip:hover { border-color: var(--green); color: var(--green-hi); }
+  .attchip .ic {
+    width: 20px; height: 20px; border-radius: 4px; background: var(--green-soft); color: var(--green-hi);
+    display: grid; place-items: center; font-size: 9px; font-weight: 800;
+  }
+
+  /* evidence spans */
+  .evspan { border-bottom: 1px dotted var(--green); border-radius: 2px; padding: 0 1px; }
+  .evspan.pulse { animation: evpulse 1s var(--ease) 3; background: color-mix(in srgb, var(--green-hi) 22%, transparent); }
+  @keyframes evpulse {
+    0% { box-shadow: 0 0 0 2px var(--green-hi), 0 0 0 2px var(--green-hi); }
+    60% { box-shadow: 0 0 0 8px transparent, 0 0 0 3px var(--green-hi); }
+    100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green-hi) 60%, transparent); }
+  }
+  .doc .evspan { border-bottom-color: #4a8a75; }
+  .doc .evspan.pulse { background: rgba(74,138,117,.3); }
+
+  /* ---------- agent trail (fcard) ---------- */
+  #trail { padding: 12px 14px 24px; display: flex; flex-direction: column; gap: 9px; }
+  .fcard {
+    border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 10px;
+    background: var(--card-2); padding: 12px 15px;
+  }
+  .fcard.warn { border-left-color: var(--amber); }
+  .fcard.bad { border-left-color: var(--red); }
+  .fcard .fb {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  }
+  .fcard .fbadge { font-weight: 800; padding: 2px 9px; border-radius: 4px; background: var(--green); color: #08110d; letter-spacing: .08em; }
+  .fcard.warn .fbadge { background: var(--amber); color: #171106; }
+  .fcard.bad .fbadge { background: var(--red); color: #170a07; }
+  .fcard .ft { margin-top: 7px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+  .fcard .ft strong { color: var(--ink); font-weight: 650; }
+  .fcard .ev {
+    margin-top: 8px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); line-height: 1.6;
+    border-left: 2px solid var(--line-2); padding: 5px 10px; background: var(--card); border-radius: 0 6px 6px 0;
+  }
+  .fcard .vch { margin-top: 8px; font-family: var(--mono); font-size: 11px; display: grid; gap: 3px; }
+  .fcard .vch div { display: flex; justify-content: space-between; gap: 12px; color: var(--ink-soft); }
+  .fcard .vch .amt { color: var(--green-hi); font-variant-numeric: tabular-nums; }
+
+  /* ---------- documents (overlay) ---------- */
+  #overlay {
+    position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 78%, transparent);
+    backdrop-filter: blur(3px); overflow-y: auto; padding: 40px 20px 60px;
+    display: none;
+  }
+  #overlay.on { display: block; }
+  #overlay .oinner { display: grid; justify-items: center; }
+  #overlay .doc { animation: docin .35s var(--ease); }
+  @keyframes docin { from { opacity: 0; transform: translateY(22px) scale(.98); } }
+  #oclose {
+    position: fixed; top: 18px; right: 22px; z-index: 51;
+    width: 38px; height: 38px; border-radius: 50%; background: var(--card); border: 1px solid var(--line-2);
+    color: var(--ink-soft); font-size: 16px;
+  }
+  #oclose:hover { color: var(--green-hi); border-color: var(--green); }
+  #ohint { text-align: center; font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .1em; margin-top: 18px; }
+
+  .doc {
+    width: 620px; max-width: 100%; background: #f4f2ea; color: #262b27; border-radius: 8px;
+    padding: 34px 38px; font-size: 14px; position: relative;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.65);
+  }
+  .doc .dhead { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #262b27; padding-bottom: 14px; }
+  .doc .dhead .co { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  .doc .dhead .dtype { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6b7268; }
+  .doc .meta { display: flex; gap: 34px; margin-top: 16px; font-size: 12.5px; color: #565d55; flex-wrap: wrap; }
+  .doc .meta b { display: block; color: #262b27; font-size: 13.5px; margin-top: 2px; font-weight: 650; }
+  .doc table { width: 100%; margin-top: 22px; border-collapse: collapse; font-size: 13px; }
+  .doc th { text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #6b7268; padding: 0 0 8px; border-bottom: 1px solid #d8d4c6; }
+  .doc td { padding: 9px 0; border-bottom: 1px solid #e6e2d4; }
+  .doc td:last-child, .doc th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .doc .total td { border-bottom: none; font-weight: 750; font-size: 15px; padding-top: 14px; }
+  .doc .foot { margin-top: 20px; font-size: 11.5px; color: #6b7268; }
+
+  /* SaaS invoice skin */
+  .doc.saas { background: #fbfbfd; padding: 0 0 26px; overflow: hidden; }
+  .doc.saas .band { height: 10px; background: linear-gradient(90deg, #4f46e5, #8b5cf6); }
+  .doc.saas .band.aws { background: linear-gradient(90deg, #b45309, #f59e0b); }
+  .doc.saas .shead { display: flex; justify-content: space-between; align-items: center; padding: 24px 38px 0; }
+  .doc.saas .slogo { display: flex; align-items: center; gap: 11px; font-weight: 800; font-size: 19px; color: #1e1b4b; letter-spacing: -0.02em; }
+  .doc.saas .slogo i { width: 34px; height: 34px; border-radius: 9px; background: #4f46e5; color: #fff; display: grid; place-items: center; font-style: normal; font-weight: 800; font-size: 14px; }
+  .doc.saas .slogo.aws { color: #431407; }
+  .doc.saas .slogo.aws i { background: #b45309; }
+  .doc.saas .inum { font-family: var(--mono); font-size: 11px; color: #6d6a8a; text-align: right; line-height: 1.8; }
+  .doc.saas .due { margin: 22px 38px 0; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .doc.saas .due.aws { background: #fff7ed; border-color: #fed7aa; }
+  .doc.saas .due .lbl { font-size: 11px; color: #4f46e5; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .doc.saas .due.aws .lbl { color: #b45309; }
+  .doc.saas .due .amt { font-size: 24px; font-weight: 800; color: #1e1b4b; font-variant-numeric: tabular-nums; }
+  .doc.saas table { margin: 16px 38px 0; width: calc(100% - 76px); }
+  .doc.saas .foot { margin: 18px 38px 0; }
+
+  /* letterhead skin */
+  .doc.letter { background: #f8f4e6; font-family: Georgia, "Times New Roman", serif; }
+  .doc.letter .lh { text-align: center; border-bottom: 3px double #6b5f43; padding-bottom: 14px; }
+  .doc.letter .lh .co { font-size: 23px; letter-spacing: .14em; font-weight: 700; color: #3e3320; }
+  .doc.letter .lh .addr { font-size: 11px; color: #8a7c5c; margin-top: 6px; letter-spacing: .06em; }
+  .doc.letter .ttl { text-align: center; font-size: 12px; letter-spacing: .34em; margin-top: 14px; color: #6b5f43; }
+  .doc.letter .meta { color: #6b5f43; }
+  .doc.letter .meta b { color: #3e3320; font-family: inherit; }
+  .doc.letter table th { font-family: inherit; letter-spacing: .1em; color: #8a7c5c; border-color: #cfc39e; }
+  .doc.letter table td { border-color: #e2d9bd; color: #3e3320; }
+  .doc.letter .sig { margin-top: 26px; display: flex; justify-content: flex-end; font-size: 12px; color: #6b5f43; font-style: italic; }
+
+  /* GST grid skin */
+  .doc.gst { background: #ffffff; padding: 26px 30px 24px; font-size: 12px; }
+  .doc.gst .ghead { display: grid; grid-template-columns: 1.5fr 1fr 1fr; border: 1px solid #9aa39b; border-bottom: none; }
+  .doc.gst .ghead div { padding: 8px 11px; border-right: 1px solid #9aa39b; font-size: 11px; color: #3c443d; line-height: 1.6; }
+  .doc.gst .ghead div:last-child { border-right: none; }
+  .doc.gst .ghead b { font-size: 12.5px; }
+  .doc.gst table { border: 1px solid #9aa39b; border-collapse: collapse; margin-top: 0; }
+  .doc.gst td, .doc.gst th { border: 1px solid #b7beb8; padding: 7px 10px; font-size: 11.5px; }
+  .doc.gst th { font-family: var(--mono); font-size: 9.5px; background: #f2f4f2; }
+  .doc.gst .bank { margin-top: 14px; border: 1px dashed #9aa39b; padding: 10px 13px; font-family: var(--mono); font-size: 11px; color: #3c443d; line-height: 1.8; }
+
+  /* spreadsheet skin */
+  .doc.xlsx { background: #ffffff; padding: 0 0 8px; overflow: hidden; width: 640px; }
+  .doc.xlsx .xbar { background: #217346; color: #fff; padding: 11px 16px; display: flex; align-items: center; gap: 11px; font-size: 12.5px; font-family: var(--mono); }
+  .doc.xlsx .xbar .xi { background: #fff; color: #217346; width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; font-weight: 800; font-size: 12px; font-family: var(--sans); flex: none; }
+  .doc.xlsx .cols, .doc.xlsx .xrow { display: grid; grid-template-columns: 36px 200px 1fr; }
+  .doc.xlsx .cols div { background: #f3f5f7; border: 1px solid #d8dde3; border-width: 0 1px 1px 0; font-size: 10px; color: #6a737d; text-align: center; padding: 4px 0; font-family: var(--mono); }
+  .doc.xlsx .xrow div { border: 1px solid #e4e8ec; border-width: 0 1px 1px 0; padding: 9px 12px; font-size: 13px; color: #24292f; }
+  .doc.xlsx .xrow div:first-child { background: #f3f5f7; color: #6a737d; text-align: center; font-family: var(--mono); font-size: 10px; padding: 9px 0; }
+  .doc.xlsx .xrow .k { color: #57606a; }
+  .doc.xlsx.pay .cols, .doc.xlsx.pay .xrow { grid-template-columns: 36px 1fr 190px 130px; }
+  .doc.xlsx.pay .xrow div { font-size: 12px; padding: 7px 12px; }
+  .doc.xlsx.pay .xrow div:last-child { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 11.5px; }
+  .doc.xlsx.pay .xrow.tot div { font-weight: 700; background: #f6f8fa; }
+
+  /* ---------- books view ---------- */
+  #view-books.on, #view-exceptions.on, #view-monthend.on { display: block; overflow-y: auto; }
+  .page { max-width: 1160px; margin: 0 auto; padding: 26px 24px 80px; }
+  .page h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+  .page .lede { margin-top: 6px; color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 760px; }
+  .statrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; }
+  .stat { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 14px 18px; }
+  .stat .v { font-size: 24px; font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--green-hi); }
+  .stat .v.warn { color: var(--amber); }
+  .stat .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  #books-grid { display: grid; grid-template-columns: 400px minmax(0,1fr); gap: 18px; margin-top: 22px; align-items: start; }
+  .panel { border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; }
+  .panel .cap { border-bottom: 1px solid var(--line); }
+  table.tb { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.tb th { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 9px 16px 8px; border-bottom: 1px solid var(--line); }
+  table.tb td { padding: 8px 16px; border-bottom: 1px solid var(--line); color: var(--ink-soft); }
+  table.tb tr:last-child td { border-bottom: none; }
+  table.tb td.num, table.tb th.num { text-align: right; font-family: var(--mono); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.tb tr.sect td { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--green); padding-top: 14px; }
+  table.tb tr.tot td { font-weight: 700; color: var(--ink); border-top: 1px solid var(--line-2); }
+
+  #register { display: flex; flex-direction: column; }
+  .vrow { border-bottom: 1px solid var(--line); padding: 11px 16px 12px; }
+  .vrow:last-child { border-bottom: none; }
+  .vrow .vtop { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .vrow .vd { font-family: var(--mono); font-size: 10.5px; color: var(--muted); flex: none; width: 46px; }
+  .vrow .vid { font-family: var(--mono); font-size: 10.5px; color: var(--green); flex: none; }
+  .vrow .vn { font-size: 13px; color: var(--ink-soft); font-weight: 550; flex: 1; min-width: 200px; }
+  .vrow .vamt { font-family: var(--mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .rcpt {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--green-hi);
+    border: 1px solid var(--line-2); border-radius: 5px; padding: 3px 9px; background: var(--green-soft);
+    transition: border-color .2s; flex: none;
+  }
+  .rcpt:hover { border-color: var(--green-hi); }
+  .vrow .vlines { margin-top: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); line-height: 1.7; }
+  .vrow .vlines .dr { color: var(--ink-soft); }
+  .vrow.held-note { background: var(--amber-soft); }
+  .vgroup > .ghead { width: 100%; text-align: left; display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card-2); flex-wrap: wrap; }
+  .vgroup > .ghead:hover .gname { color: var(--green-hi); }
+  .vgroup .gname { font-size: 13px; font-weight: 650; color: var(--ink); }
+  .vgroup .gmeta { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .vgroup .gtw { font-family: var(--mono); font-size: 10px; color: var(--green); margin-left: auto; letter-spacing: .08em; }
+  .vgroup .gkids { display: none; border-left: 3px solid var(--line-2); }
+  .vgroup.open .gkids { display: block; }
+  .vgroup .gkids .vrow { padding-left: 20px; }
+
+  /* ---------- exceptions ---------- */
+  #cases { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+  .case { border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 14px; background: var(--card); padding: 18px 20px; }
+  .case.held, .case.mismatch { border-left-color: var(--amber); }
+  .case.resolved { border-left-color: var(--green); }
+  .case .chead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .case .cid { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .case h3 { font-size: 15.5px; font-weight: 650; margin-top: 8px; letter-spacing: -0.01em; }
+  .case .amt { font-family: var(--mono); font-size: 12px; color: var(--green-hi); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .case .csum { margin-top: 8px; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  .case .chain { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+  .case .step { display: flex; gap: 10px; font-size: 12px; }
+  .case .step .sn { font-family: var(--mono); font-size: 10px; color: var(--green); flex: none; width: 40px; padding-top: 2px; }
+  .case .step .sq { font-family: var(--mono); font-size: 10.5px; color: var(--muted); line-height: 1.6; border-left: 2px solid var(--line-2); padding: 3px 10px; background: var(--card-2); border-radius: 0 6px 6px 0; flex: 1; }
+  .case .step .sq b { color: var(--ink-soft); font-weight: 650; }
+  .case .clinks { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ---------- month-end ---------- */
+  table.diff { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.diff th { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: right; padding: 10px 16px 9px; border-bottom: 1px solid var(--line); }
+  table.diff th:first-child { text-align: left; }
+  table.diff td { padding: 9px 16px; border-bottom: 1px solid var(--line); color: var(--ink-soft); }
+  table.diff td.num { text-align: right; font-family: var(--mono); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.diff td.ok { color: var(--muted); font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-align: center; }
+  table.diff tr.dif { background: var(--amber-soft); }
+  table.diff tr.dif td { color: var(--ink); }
+  table.diff tr:last-child td { border-bottom: none; }
+  .explain { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+
+  /* ---------- intro + tour ---------- */
+  #intro {
+    position: fixed; inset: 0; z-index: 80; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--bg) 62%, transparent); backdrop-filter: blur(3px);
+  }
+  #intro.gone { display: none; }
+  #intro .icard {
+    width: 470px; max-width: calc(100vw - 40px); background: var(--card); border: 1px solid var(--line-2);
+    border-radius: 16px; padding: 28px 30px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.7);
+  }
+  #intro .icard img { width: 42px; height: 42px; border-radius: 10px; }
+  #intro .icard h2 { margin-top: 16px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+  #intro .icard p { margin-top: 10px; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  #intro .btns { margin-top: 22px; display: flex; gap: 10px; }
+  .cta { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; border-radius: 8px; padding: 10px 16px; }
+  .cta.pri { background: var(--green-hi); color: #08110d; }
+  .cta.sec { border: 1px solid var(--line-2); color: var(--ink-soft); background: var(--card-2); }
+  .cta.sec:hover { color: var(--green-hi); border-color: var(--green); }
+
+  #tourpin {
+    position: fixed; z-index: 85; width: 320px; max-width: calc(100vw - 30px);
+    background: var(--card); border: 1px solid var(--green); border-radius: 14px; padding: 15px 17px;
+    box-shadow: 0 20px 60px -12px rgba(0,0,0,.75), 0 0 0 4px color-mix(in srgb, var(--green) 25%, transparent);
+    display: none;
+  }
+  #tourpin.on { display: block; }
+  #tourpin .tnum {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--green-hi); color: #08110d;
+    display: inline-grid; place-items: center; font-family: var(--mono); font-weight: 800; font-size: 13px;
+  }
+  #tourpin .tt { margin-top: 10px; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  #tourpin .tt strong { color: var(--ink); }
+  #tourpin .tbtns { margin-top: 14px; display: flex; gap: 8px; align-items: center; }
+  #tourpin .tstep { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: auto; }
+  .tour-target { position: relative; box-shadow: 0 0 0 2px var(--green-hi), 0 0 24px -4px var(--green) !important; border-radius: 10px; }
+
+  #back {
+    display: none; margin: 8px 8px 0; font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    color: var(--ink-soft); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 14px; background: var(--card);
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1200px) {
+    #view-inbox.on { grid-template-columns: 300px minmax(0,1fr) 350px; }
+    #books-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    #top { padding: 10px 12px; }
+    #top .mode { display: none; }
+    #view-inbox.on { display: block; }
+    #pane-list, #pane-msg, #pane-trail { border-right: none; }
+    body:not(.thread-open) #pane-msg, body:not(.thread-open) #pane-trail { display: none; }
+    body.thread-open.inbox-on #pane-list { display: none; }
+    body.thread-open #back { display: inline-block; }
+    .pane { height: auto; }
+    .scroll { overflow: visible; }
+    #cases, .explain, .statrow { grid-template-columns: 1fr; }
+    .doc { padding: 24px 20px; }
+    .doc.gst, .doc.xlsx { overflow-x: auto; }
+    main { overflow-y: auto; }
+    .view.on { height: auto; min-height: 100%; }
+  }
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==" alt="Nien">Nien</div>
+  <div class="mode">Meridian Staffing · June 2026 · shadow mode — parallel books</div>
+  <nav id="tabs" aria-label="Views">
+    <button id="tab-inbox" class="on">Inbox</button>
+    <button id="tab-books">Books</button>
+    <button id="tab-exceptions">Exceptions<span class="n">4</span></button>
+    <button id="tab-monthend">Month-end</button>
+  </nav>
+  <div class="right">
+    <button id="btn-tour" title="Take the tour">?</button>
+    <a class="demo-link" href="https://nienhq.github.io/about.html">Book a demo</a>
+  </div>
+</header>
+
+<main>
+  <section id="view-inbox" class="view on">
+    <div class="pane" id="pane-list">
+      <div class="cap"><span>finance@meridianstaffing.in — June 2026</span><span class="dot"></span></div>
+      <div class="scroll"><div id="threads"></div></div>
+    </div>
+    <div class="pane" id="pane-msg">
+      <button id="back">← Back to inbox</button>
+      <div id="msghead" hidden>
+        <h2 id="mh-subj"></h2>
+        <div class="meta" id="mh-meta"></div>
+      </div>
+      <div class="scroll" id="msgscroll">
+        <div id="empty">
+          <div class="inner">
+            <div class="k">Meridian Staffing LLP · fictional</div>
+            <div>Select a thread. Everything here is clickable —<br>attachments open, and every number has a receipt.</div>
+          </div>
+        </div>
+        <div id="msgs" hidden></div>
+      </div>
+    </div>
+    <div class="pane" id="pane-trail">
+      <div class="cap"><span>Nien · books agent — this thread</span><span class="dot"></span></div>
+      <div class="scroll"><div id="trail"></div></div>
+    </div>
+  </section>
+
+  <section id="view-books" class="view">
+    <div class="page">
+      <h1>Parallel books — June 2026</h1>
+      <p class="lede">Every entry below was posted by the agent from the mail on the left of the Inbox view.
+      Click <span class="rcpt" style="cursor:default">receipt ↗</span> on any row to walk back to the exact line in the email or document it came from.</p>
+      <div class="statrow" id="bstats"></div>
+      <div id="books-grid">
+        <div class="panel">
+          <div class="cap"><span>Trial balance — June movement</span></div>
+          <div id="tbwrap"></div>
+        </div>
+        <div class="panel">
+          <div class="cap"><span>Voucher register — June 2026</span><span id="regcount"></span></div>
+          <div id="register"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-exceptions" class="view">
+    <div class="page">
+      <h1>Exceptions — open case files</h1>
+      <p class="lede">Four things the agent refused to post quietly. Each one is held with its full evidence chain;
+      nothing moves until a person decides.</p>
+      <div id="cases"></div>
+    </div>
+  </section>
+
+  <section id="view-monthend" class="view">
+    <div class="page">
+      <h1>Month-end — Nien's books vs Meridian's books</h1>
+      <p class="lede">Meridian's own accountant kept the books as usual. Nien kept a parallel set from the same mailbox.
+      At close, the two sets differ in exactly two places — and both differences are explained below.</p>
+      <div class="statrow" id="mstats"></div>
+      <div class="panel" style="margin-top:22px">
+        <div class="cap"><span>June expense &amp; revenue movement — comparison</span></div>
+        <div style="overflow-x:auto"><table class="diff" id="difftable"></table></div>
+      </div>
+      <div class="explain" id="explain"></div>
+    </div>
+  </section>
+</main>
+
+<div id="overlay">
+  <div class="oinner"><div id="odoc"></div><div id="ohint">ESC OR CLICK OUTSIDE TO CLOSE</div></div>
+</div>
+<button id="oclose" hidden aria-label="Close document">✕</button>
+
+<div id="intro" class="gone">
+  <div class="icard">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABLFBMVEUGHxwIHhwKIh5ec2k6TkUbMixnenEhNzINJSF5joHm9eLJ2sZBVkyarZ3q+uaqvawkOjMTKiWFmIzn+OXu/ubN4MtMYVWluKfu/eO1yLYsQjoXLimSppbT5tJTaV4qQDexxLO6zbrr/+PZ7NYEIBsxR0Dr/ObD1cI9U0rs++fe8dpofXLL3spJXlOuwbHi9d50iXxFW1HR5M4xRj+2yrnn+d9+k4VWbGFccWa+0b/s/enm+eJEWU5yhnqWqZvH2sURJyNhdmzc7dmKnpDW6dSJnY54inwFHiBMYllsgnY1S0KesqKjtqY6UEanuqqBl4earaAySD+NopLo+uRSZ1y/0sCBlYmtwK7C1L9tg3iUp5llem7X69gnPjkfNjEZLygqPzilt6kgNS7s/OdrxCILAAADr0lEQVRo3u1Xa1cSURSFEQRREeuq1xCRQa5E5CihKKQiplmY5TvTLOv//4fOOfcMj1ZrxczQ6svdiw/OVfaZex57H0MhAwMDAwMDAwMDg6EhPNBRMFgjkf6D6GhsmPzxscT4RB//ZHIqNTz+6SdPhZiZ7R6k5oQU88+GxZ9eSApAZtE9yC7hs8hFgrD2pQPpbJEfWaaDQk7YtlBKrBSHwZ+ae07vCxFKLyw4KK7AgxRSKlF+GZw/u4psCCWEsxYPrZfpR43KYlD+V1V8WXhdKZF3Y7M2Q7ehZ0B+K9hIRLYx1xJSXsc7SNlw8D6KDukeOm1+8Xpc4JtKoZbKUANihGDwcaZKcIBwduK++WchHVBLJezd6MQe8EtdCuDfae638HKAxGYztOyLv5YR1C8ieTBN2ZLcTqoFeQnX3nClG4dpP/Th/Tx3C74ioFClJyhv8ij0Fg6OK27A3ah3/vi7kuaD3uQyZlfrmtDOvSdBhRLpnKm25wjxI26X3jaJnSieAJ7hD+7MidOUN/7mxwa/v6sPhOinJNeBZ/isqkfEVt6kL31OLSjtHoXjX1xQ70hZudRpW8JuVfCXXqQvumuz+sz0iE2sGULlTlCheYbDIFWK7zq49MVOXHXrfAe4Jq6uMUJ8zBF6xFqjVBwWW4hQXh+Q/8aVss+F7ikMXeM8DRNl3TpcB2eHIqS/KM5S5nigAKl5weqZ6xZuMYMzjf1u3bkBEmMUoHlwIal51X1tsCt81VeA99rmwlkjNHRKtR+s2xKniEXo28IFp6hyOaiyUhFAMW2xp60+Ol/nW00dOpy/1h2XwPZYAv0tBYqJqsn9TrZAdWcNlWwEYP/4l9L26J/p8wY3Ukb3+/dVzWujuipR744BBZaqWvDCD5W7pgjAxaMce8SqYAAMy+kA+yfxgB0m640f+n3N0VrtihGkjfW6k47IitC2JvxsYdgumhCtPtTRD0gTyDUCxBT4wY5U+4d3fogAhqDnoaENoUkygWac37LIDnREteDDDgjas5SS7FkoE7ANwQd6tJaH/kHD9mloBNAH6Bksq/YskAkaOChMO6/dDTaZpm9+SPMeO7toP+i0tdg3dXp6/M4nildkzHCLU53oGr85LV4y4FqEAM9SWIYN3CwQUFupeK8LvNjhvpO9qdNm0VmvYDm1uf15noMFgBn+6Y4Cp43mS/X7XRBEJ+/7M32W8+iRf41Q/K2SpHG4HP0zpB7rw/sX7Y+IrXmWTwMDAwMDAwMDA4P/i1+YC5JgD5AoiQAAAABJRU5ErkJggg==" alt="Nien">
+    <h2>This is a fictional company's real month.</h2>
+    <p>Meridian Staffing LLP, ~40 people, June 2026. One mailbox of finance mail on the left; the books Nien's agents
+    kept from it on the right. Click anything. Every number has a receipt.</p>
+    <div class="btns">
+      <button class="cta pri" id="btn-explore">Explore freely</button>
+      <button class="cta sec" id="btn-taketour">Take the tour</button>
+    </div>
+  </div>
+</div>
+
+<div id="tourpin">
+  <span class="tnum" id="tp-n">1</span>
+  <div class="tt" id="tp-t"></div>
+  <div class="tbtns">
+    <button class="cta pri" id="tp-next">Next</button>
+    <button class="cta sec" id="tp-end">End tour</button>
+    <span class="tstep" id="tp-s"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+function fmt(n) { return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmt0(n) { return "₹" + n.toLocaleString("en-IN"); }
+function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+function ev(id, text) { return '<span class="evspan" data-ev="' + id + '">' + text + "</span>"; }
+
+// ======================================================================
+// DATASET — Meridian Staffing LLP, June 2026 (fictional)
+// ======================================================================
+
+// ---- corporate card, June cycle: [date, merchant, amount, status, account]
+// status: ok = matched to a receipt on first pass · late = receipt requested,
+// arrived Jun 15 · held = amount mismatch, not posted
+var CARD = [
+  ["Jun 01", "Uber — client visit, Northwind site", 640, "ok", "travel"],
+  ["Jun 02", "Zoom — annual seats true-up", 18700, "ok", "soft"],
+  ["Jun 03", "Amazon Web Services", 102400, "ok", "soft"],
+  ["Jun 03", "Google Workspace", 24320, "ok", "soft"],
+  ["Jun 04", "Figma", 15300, "ok", "soft"],
+  ["Jun 04", "Uber", 410, "ok", "travel"],
+  ["Jun 05", "Cafe Aroma — team lunch", 7350, "ok", "meals"],
+  ["Jun 06", "IndiGo — flight, V. Iyer (Helix)", 9840, "ok", "travel"],
+  ["Jun 08", "Zoom — webinar add-on", 4720, "ok", "soft"],
+  ["Jun 09", "Amazon Business — office supplies", 5480, "late", "office"],
+  ["Jun 10", "Meridian Air — travel, R. Mehta", 17500, "held", "travel"],
+  ["Jun 10", "Hotel Crestline — R. Mehta, Delhi", 34200, "ok", "travel"],
+  ["Jun 10", "Uber — airport transfers", 1280, "ok", "travel"],
+  ["Jun 11", "GitHub", 21400, "ok", "soft"],
+  ["Jun 11", "Notion", 8160, "ok", "soft"],
+  ["Jun 12", "Uber", 2710, "late", "travel"],
+  ["Jun 12", "Slack", 26900, "ok", "soft"],
+  ["Jun 13", "Zeptonow — pantry restock", 3940, "ok", "meals"],
+  ["Jun 14", "LinkedIn Recruiter", 44500, "ok", "recruit"],
+  ["Jun 15", "Adobe Creative Cloud", 12980, "ok", "soft"],
+  ["Jun 16", "IndiGo — flight, S. Rao (Orbit)", 11260, "ok", "travel"],
+  ["Jun 17", "OYO — stay, S. Rao, Pune", 6800, "ok", "travel"],
+  ["Jun 18", "Uber", 940, "ok", "travel"],
+  ["Jun 18", "Canva", 3320, "ok", "soft"],
+  ["Jun 19", "Chai Point — client meeting", 1140, "ok", "meals"],
+  ["Jun 20", "Datadog", 38600, "ok", "soft"],
+  ["Jun 21", "Uber", 760, "ok", "travel"],
+  ["Jun 22", "Amazon Business — cables & docks", 8420, "ok", "office"],
+  ["Jun 23", "BlueDart — courier", 3860, "ok", "courier"],
+  ["Jun 24", "Zomato — late-working meals", 4210, "ok", "meals"],
+  ["Jun 25", "Grammarly", 5940, "ok", "soft"],
+  ["Jun 26", "Uber", 1530, "ok", "travel"],
+  ["Jun 27", "Print Studio — proposal decks", 2890, "ok", "office"],
+  ["Jun 28", "Microsoft 365", 31200, "ok", "soft"]
+];
+
+// ---- payroll journal, June: [name, deployment, amount] — 38 rows
+var PAYROLL = [
+  ["Anita Nair", "Northwind Logistics", 242000],
+  ["Rahul Mehta", "Atlas Retail", 238000],
+  ["Sanjana Rao", "Orbit Systems", 244500],
+  ["Prakash Kulkarni", "Northwind Logistics", 235500],
+  ["Vikram Iyer", "Helix Pharma", 246000],
+  ["Maryam Sheikh", "Northwind Logistics", 234000],
+  ["Tanmay Banerjee", "Atlas Retail", 241000],
+  ["Kavya Reddy", "Helix Pharma", 239000],
+  ["Dev Krishnan", "consultant · Atlas Retail", 149500],
+  ["Nikhil Gupta", "Northwind Logistics", 197000],
+  ["Jincy Thomas", "Orbit Systems", 193000],
+  ["Deepa Sharma", "corporate · finance", 198500],
+  ["Farhan Khan", "Atlas Retail", 191500],
+  ["Latha Menon", "Helix Pharma", 196000],
+  ["Hardik Patel", "Northwind Logistics", 194000],
+  ["Chandrima Bose", "Atlas Retail", 199000],
+  ["Uday Singh", "corporate · sales", 191000],
+  ["Gautam Rao", "Northwind Logistics", 195500],
+  ["Bipasha Das", "Orbit Systems", 194500],
+  ["Om Verma", "Northwind Logistics", 162000],
+  ["Wilma D'Souza", "Atlas Retail", 158000],
+  ["Ishita Chawla", "Helix Pharma", 163500],
+  ["Yash Naidu", "Northwind Logistics", 156500],
+  ["Zoya Ahmed", "Atlas Retail", 161000],
+  ["Arjun Pillai", "Orbit Systems", 159000],
+  ["Esha Joshi", "Northwind Logistics", 164000],
+  ["Simran Kaur", "Atlas Retail", 156000],
+  ["Sushant Mishra", "Helix Pharma", 160500],
+  ["Ritika Nanda", "Northwind Logistics", 159500],
+  ["Amit Sen", "corporate · HR", 137000],
+  ["Karthik Bhat", "Northwind Logistics", 133000],
+  ["Manasi Rane", "Atlas Retail", 138500],
+  ["Pritam Dutta", "Orbit Systems", 131500],
+  ["Tessa George", "Helix Pharma", 136000],
+  ["Varun Lamba", "Northwind Logistics", 134000],
+  ["Neha Kapoor", "corporate · admin", 122000],
+  ["Dinesh Rawat", "Northwind Logistics", 118000],
+  ["Julius Ekka", "Atlas Retail", 170500]
+];
+var PAY_TOTAL = PAYROLL.reduce(function (s, r) { return s + r[2]; }, 0);
+var CARD_POSTED = CARD.filter(function (l) { return l[3] !== "held"; }).reduce(function (s, l) { return s + l[2]; }, 0);
+var CARD_ALL = CARD.reduce(function (s, l) { return s + l[2]; }, 0);
+console.assert(PAY_TOTAL === 6840000, "payroll sum", PAY_TOTAL);
+console.assert(CARD_POSTED === 466100, "card posted sum", CARD_POSTED);
+
+// ---- documents (attachments) ----
+var DOCS = {
+  "doc-cs": { skin: "saas", html:
+    '<div class="band"></div>' +
+    '<div class="shead"><div class="slogo"><i>CS</i>CloudSuite</div>' +
+    '<div class="inum">INVOICE ' + ev("ev-cs-num", "INV-8841") + '<br>Jun 01, 2026 · net 15</div></div>' +
+    '<div class="due"><span class="lbl">Amount due</span><span class="amt">' + ev("ev-cs-total", "₹1,65,000.00") + "</span></div>" +
+    "<table><tr><th>Description</th><th>Amount</th></tr>" +
+    "<tr><td>CRM subscription — " + ev("ev-cs-period", "June 2026") + ", 40 seats</td><td>₹1,65,000.00</td></tr></table>" +
+    '<div class="foot">Billed to Meridian Staffing LLP · card / NEFT · GSTIN 27AAACC4629L1ZM</div>' },
+
+  "doc-dw": { skin: "letter", html:
+    '<div class="lh"><div class="co">DESKWORKS ESTATES</div>' +
+    '<div class="addr">Tower B, Sector 62, Noida · leasing &amp; facilities · estd. 1994</div></div>' +
+    '<div class="ttl">TAX INVOICE</div>' +
+    '<div class="meta"><span>Invoice №<b>' + ev("ev-dw-num", "DW-3307") + "</b></span>" +
+    "<span>Date<b>Jun 04, 2026</b></span><span>Bill to<b>Meridian Staffing LLP</b></span></div>" +
+    "<table><tr><th>Particulars</th><th>Amount</th></tr>" +
+    "<tr><td>Office lease, 4th floor — " + ev("ev-dw-period", "May–Jun 2026 period") + "</td><td>₹1,80,000.00</td></tr>" +
+    '<tr class="total"><td>Total due</td><td>' + ev("ev-dw-total", "₹1,80,000.00") + "</td></tr></table>" +
+    '<div class="sig">for DeskWorks Estates Pvt. Ltd.</div>' },
+
+  "doc-vx": { skin: "gst", html:
+    '<div class="ghead"><div><b>Vertex Supplies Pvt Ltd</b><br>GSTIN 07AABCV2314Q1Z6</div>' +
+    "<div>Invoice no.<br><b>" + ev("ev-vx-num", "5512") + "</b></div><div>Date<br><b>Jun 16, 2026</b></div></div>" +
+    "<table><tr><th>#</th><th>Description</th><th>HSN</th><th>Qty</th><th>Amount</th></tr>" +
+    "<tr><td>1</td><td>Networking hardware — against " + ev("ev-vx-po", "PO-2231") + "</td><td>8517</td><td>12</td><td>₹6,31,356.00</td></tr>" +
+    "<tr><td></td><td>IGST @ 18%</td><td></td><td></td><td>₹1,13,644.00</td></tr>" +
+    '<tr><td colspan="4" style="text-align:right;font-weight:700;">Total (incl. GST)</td>' +
+    "<td>" + ev("ev-vx-total", "₹7,45,000.00") + "</td></tr></table>" +
+    '<div class="bank">Bank details (updated): ' + ev("ev-vx-bank", "A/C ····7742 · IFSC HDFC0004XX") + "<br>" +
+    "We have recently changed banks. Kindly remit to the new account.</div>" },
+
+  "doc-ts": { skin: "xlsx", html:
+    '<div class="xbar"><span class="xi">X</span>timesheet_june_dev-krishnan.xlsx</div>' +
+    '<div class="cols"><div></div><div>A</div><div>B</div></div>' +
+    '<div class="xrow"><div>1</div><div class="k">Employee</div><div>Dev Krishnan · consultant</div></div>' +
+    '<div class="xrow"><div>2</div><div class="k">Client</div><div>Atlas Retail — store systems</div></div>' +
+    '<div class="xrow"><div>3</div><div class="k">Period</div><div>26 May – 25 Jun 2026</div></div>' +
+    '<div class="xrow"><div>4</div><div class="k">Days worked</div><div>' + ev("ev-ts-days", "23") + "</div></div>" +
+    '<div class="xrow"><div>5</div><div class="k">Rate per day</div><div>₹6,500</div></div>' +
+    '<div class="xrow"><div>6</div><div class="k">Amount</div><div>' + ev("ev-ts-amt", "₹1,49,500") + "</div></div>" +
+    '<div class="xrow"><div>7</div><div class="k">Approved by</div><div>' + ev("ev-ts-appr", "&nbsp;") + "</div></div>" },
+
+  "doc-op": { skin: "", html:
+    '<div class="dhead"><div class="co">OfficePlus Trading Co.</div><div class="dtype">Invoice</div></div>' +
+    '<div class="meta"><span>Invoice no.<b>' + ev("ev-op-num", "#4471") + "</b></span><span>Date<b>Jun 03, 2026</b></span>" +
+    "<span>Bill to<b>Meridian Staffing LLP</b></span></div>" +
+    "<table><tr><th>Item</th><th>Qty</th><th>Amount</th></tr>" +
+    "<tr><td>Ergonomic office chairs, model K2</td><td>6</td><td>₹57,000.00</td></tr>" +
+    "<tr><td>Standing desk converters</td><td>3</td><td>₹39,000.00</td></tr>" +
+    '<tr class="total"><td>Total</td><td></td><td>' + ev("ev-op-total", "₹96,000.00") + "</td></tr></table>" +
+    '<div class="foot">Payment within 30 days · delivery challan DC-9982 enclosed</div>' },
+
+  "doc-cn": { skin: "", html:
+    '<div class="dhead"><div class="co">OfficePlus Trading Co.</div><div class="dtype">Credit note</div></div>' +
+    '<div class="meta"><span>Credit note<b>' + ev("ev-cn-num", "CN-118") + "</b></span><span>Date<b>Jun 10, 2026</b></span>" +
+    "<span>Against<b>Invoice #4471</b></span></div>" +
+    "<table><tr><th>Particulars</th><th>Amount</th></tr>" +
+    "<tr><td>Goodwill credit — 5% of invoice value, damaged castors on two K2 chairs</td><td>" + ev("ev-cn-amt", "₹4,800.00") + "</td></tr></table>" +
+    '<div class="foot">Apply against invoice #4471. Balance payable: ₹91,200.00</div>' },
+
+  "doc-aws": { skin: "saas", html:
+    '<div class="band aws"></div>' +
+    '<div class="shead"><div class="slogo aws"><i>aws</i>Amazon Web Services</div>' +
+    '<div class="inum">INVOICE ' + ev("ev-aws-num", "AWSIN-26-58821") + "<br>Jun 03, 2026 · May usage</div></div>" +
+    '<div class="due aws"><span class="lbl">Charged to card on file</span><span class="amt">' + ev("ev-aws-total", "₹1,02,400.00") + "</span></div>" +
+    "<table><tr><th>Service</th><th>Amount</th></tr>" +
+    "<tr><td>EC2, RDS, S3 — production &amp; staging, May 2026</td><td>₹96,180.00</td></tr>" +
+    "<tr><td>Support plan (Business)</td><td>₹6,220.00</td></tr></table>" +
+    '<div class="foot">Account 7218-4402-1195 · Meridian Staffing LLP</div>' },
+
+  "doc-challans": { skin: "", html:
+    '<div class="dhead"><div class="co">Sharma &amp; Associates</div><div class="dtype">Fee note · challans</div></div>' +
+    '<div class="meta"><span>Ref<b>SA/MER/2026-27/041</b></span><span>Date<b>Jun 19, 2026</b></span>' +
+    "<span>Client<b>Meridian Staffing LLP</b></span></div>" +
+    "<table><tr><th>Particulars</th><th>Amount</th></tr>" +
+    "<tr><td>Professional fee — GST &amp; TDS compliance, May 2026</td><td>" + ev("ev-sharma-fee", "₹35,000.00") + "</td></tr>" +
+    "<tr><td>TDS deposited — challan CIN 0281-2606-00417 (sec 192, 194C, 194J)</td><td>" + ev("ev-tds-amt", "₹2,84,000.00") + "</td></tr>" +
+    "<tr><td>GST deposited — GSTR-3B May 2026, ARN AA270626014482K</td><td>" + ev("ev-gst-amt", "₹5,61,000.00") + "</td></tr></table>" +
+    '<div class="foot">Challan copies enclosed. TDS and GST amounts were debited from your KN Bank current account on Jun 19.</div>' },
+
+  "doc-ch": { skin: "gst", html:
+    '<div class="ghead"><div><b>Compute Hub India Pvt Ltd</b><br>GSTIN 29AAJCC8817R1ZP</div>' +
+    "<div>Invoice no.<br><b>" + ev("ev-ch-num", "CH-26-1104") + "</b></div><div>Date<br><b>Jun 17, 2026</b></div></div>" +
+    "<table><tr><th>#</th><th>Description</th><th>HSN</th><th>Qty</th><th>Amount</th></tr>" +
+    "<tr><td>1</td><td>ThinkBook 14 G7 — i7/32GB/1TB (new joiner units)</td><td>8471</td><td>2</td><td>₹1,55,932.00</td></tr>" +
+    "<tr><td></td><td>IGST @ 18%</td><td></td><td></td><td>₹28,068.00</td></tr>" +
+    '<tr><td colspan="4" style="text-align:right;font-weight:700;">Total (incl. GST)</td>' +
+    "<td>" + ev("ev-ch-total", "₹1,84,000.00") + "</td></tr></table>" +
+    '<div class="bank">Payment: NEFT to A/C ····2216 · IFSC KKBK0000958 (unchanged, 6 prior payments)</div>' },
+
+  "doc-2107": { skin: "", html:
+    '<div class="dhead"><div class="co">Meridian Staffing LLP</div><div class="dtype">Invoice · draft for sign-off</div></div>' +
+    '<div class="meta"><span>Invoice no.<b>' + ev("ev-2107-num", "INV-2107") + "</b></span><span>Date<b>Jun 16, 2026</b></span>" +
+    "<span>Bill to<b>Northwind Logistics Ltd</b></span></div>" +
+    "<table><tr><th>Particulars</th><th>Amount</th></tr>" +
+    "<tr><td>Staff augmentation — " + ev("ev-2107-heads", "13 consultants") + ", June 2026, per MSA rate card</td><td>₹38,50,000.00</td></tr>" +
+    '<tr class="total"><td>Total</td><td>' + ev("ev-2107-total", "₹38,50,000.00") + "</td></tr></table>" +
+    '<div class="foot">Derived from the June deployment roster and approved timesheets. Net 30.</div>' },
+
+  "doc-trip": { skin: "", html:
+    '<div class="dhead"><div class="co">Meridian Air</div><div class="dtype">E-ticket receipt</div></div>' +
+    '<div class="meta"><span>PNR<b>' + ev("ev-trip-pnr", "MX4QZL") + "</b></span><span>Passenger<b>Rahul Mehta</b></span>" +
+    "<span>Sector<b>BLR–DEL–BLR</b></span></div>" +
+    "<table><tr><th>Particulars</th><th>Amount</th></tr>" +
+    "<tr><td>Base fare + taxes, economy saver — travel Jun 10</td><td>" + ev("ev-trip-amt", "₹12,500.00") + "</td></tr></table>" +
+    '<div class="foot">Paid on corporate card ····5522. This receipt reflects the fare at booking.</div>' }
+};
+
+// generated: card statement (34 lines)
+DOCS["doc-card"] = { skin: "", html: (function () {
+  var h = '<div class="dhead"><div class="co">KN Bank — Corporate Card</div><div class="dtype">Statement</div></div>' +
+    '<div class="meta"><span>Card<b>····5522 · Meridian Staffing LLP</b></span><span>Cycle<b>Jun 01 – Jun 28, 2026</b></span>' +
+    "<span>Lines<b>34</b></span></div>" +
+    "<table><tr><th>Date</th><th>Merchant</th><th>Amount</th></tr>";
+  CARD.forEach(function (l, i) {
+    h += "<tr><td>" + l[0] + "</td><td>" + esc(l[1]) + "</td><td>" + ev("card-" + i, fmt(l[2])) + "</td></tr>";
+  });
+  h += '<tr class="total"><td></td><td>Total for cycle</td><td>' + fmt(CARD_ALL) + "</td></tr></table>" +
+    '<div class="foot">Autopay on Jul 04 from current a/c ····0417.</div>';
+  return h;
+})() };
+
+// generated: payroll journal (38 rows)
+DOCS["doc-pay"] = { skin: "xlsx pay", html: (function () {
+  var h = '<div class="xbar"><span class="xi">X</span>payroll_journal_june_2026.xlsx — staged for approval</div>' +
+    '<div class="cols"><div></div><div>A · name</div><div>B · deployment</div><div>C · amount</div></div>';
+  PAYROLL.forEach(function (r, i) {
+    h += '<div class="xrow"><div>' + (i + 1) + "</div><div>" + esc(r[0]) + '</div><div class="k">' + esc(r[1]) + "</div><div>" +
+      ev("pr-" + i, fmt(r[2])) + "</div></div>";
+  });
+  h += '<div class="xrow tot"><div></div><div>Gross payroll — June</div><div>38 timesheets, all approved</div><div>' + fmt(PAY_TOTAL) + "</div></div>";
+  return h;
+})() };
+
+// copy of INV-2093 used in the resend thread
+DOCS["doc-2093"] = { skin: "", html:
+  '<div class="dhead"><div class="co">Meridian Staffing LLP</div><div class="dtype">Invoice · copy</div></div>' +
+  '<div class="meta"><span>Invoice no.<b>INV-2093</b></span><span>Date<b>Apr 30, 2026</b></span>' +
+  "<span>Bill to<b>Northwind Logistics Ltd</b></span></div>" +
+  "<table><tr><th>Particulars</th><th>Amount</th></tr>" +
+  "<tr><td>Staff augmentation — April 2026, per MSA rate card</td><td>₹15,40,000.00</td></tr>" +
+  '<tr class="total"><td>Total</td><td>' + ev("ev-2093-total", "₹15,40,000.00") + "</td></tr></table>" +
+  '<div class="foot">Net 30 · due May 30, 2026 · remit to KN Bank a/c ····0417</div>' };
+
+// ---- threads ----
+var THREADS = [
+
+{ id: "cloudsuite", d: 2, date: "Jun 02", fromName: "CloudSuite Billing", from: "billing@cloudsuite.io",
+  subj: "Invoice INV-8841 — CloudSuite CRM, June 2026",
+  msgs: [
+    { fn: "CloudSuite Billing", fa: "billing@cloudsuite.io", to: "finance@meridianstaffing.in", date: "Jun 02 · 09:02",
+      att: { name: "invoice_INV-8841.pdf", size: "82 KB", doc: "doc-cs" },
+      body: "<p>Hello,</p><p>Please find attached invoice " + ev("b-cs-num", "INV-8841") + " for your CloudSuite CRM subscription covering " + ev("b-cs-period", "June 2026") + " (40 seats). The amount due is " + ev("b-cs-amt", "₹1,65,000.00") + ", payable by June 15 under your annual agreement.</p><p>No action is needed if you pay by standing instruction.</p><p class='sig'>CloudSuite Billing<br>billing@cloudsuite.io</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 02 · 09:14", x: "Invoice <strong>INV-8841</strong> · CloudSuite · <strong>₹1,65,000.00</strong> · June 2026 subscription, 40 seats.",
+      ev: "matches contract rate agreed Nov 2025 · 7 prior payments, same amount · seat count matches HR headcount (40)" },
+    { k: "", b: "POSTED", t: "Jun 02 · 09:15", x: "Posted to the parallel books as <strong>V-602</strong>. Nothing was left for a person to re-key.",
+      vch: [["Dr · Software & cloud", "1,65,000.00"], ["Cr · Accounts payable · CloudSuite", "1,65,000.00"]] }
+  ] },
+
+{ id: "aws", d: 3, date: "Jun 03", fromName: "AWS Billing", from: "no-reply@billing.aws",
+  subj: "Your Amazon Web Services invoice — May 2026 usage",
+  msgs: [
+    { fn: "AWS Billing", fa: "no-reply@billing.aws", to: "finance@meridianstaffing.in", date: "Jun 03 · 05:41",
+      att: { name: "AWSIN-26-58821.pdf", size: "121 KB", doc: "doc-aws" },
+      body: "<p>Greetings from Amazon Web Services.</p><p>Your invoice " + ev("b-aws-num", "AWSIN-26-58821") + " for May 2026 usage is attached. The total of " + ev("b-aws-amt", "₹1,02,400.00") + " has been charged to the card on file ending 5522.</p><p class='sig'>Amazon Web Services · account 7218-4402-1195</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 03 · 06:02", x: "AWS invoice <strong>₹1,02,400.00</strong>, May usage, charged to corporate card ····5522.",
+      ev: "within 4% of trailing 3-month average (₹98,700) · no new services" },
+    { k: "", b: "MATCHED", t: "Jun 12 · 10:31", x: "Matched to card statement line of Jun 03. Posts with the card batch — receipt already on file, so this line needed no chasing." }
+  ] },
+
+{ id: "officeplus", d: 10.2, date: "Jun 10", fromName: "OfficePlus Trading", from: "sales@officeplus.co.in",
+  subj: "Invoice #4471 — chairs and desk converters", flag: "resolved",
+  msgs: [
+    { fn: "OfficePlus Trading", fa: "sales@officeplus.co.in", to: "finance@meridianstaffing.in", date: "Jun 04 · 11:20",
+      att: { name: "invoice_4471.pdf", size: "77 KB", doc: "doc-op" },
+      body: "<p>Dear Sir/Madam,</p><p>Thank you for your order. Invoice " + ev("b-op-num", "#4471") + " for " + ev("b-op-amt", "₹96,000.00") + " is attached along with delivery challan DC-9982. Goods were delivered to your Sector 62 office on June 3.</p><p>Payment is due within 30 days.</p><p class='sig'>OfficePlus Trading Co.</p>" },
+    { fn: "Neha Kapoor", fa: "neha.kapoor@meridianstaffing.in", to: "sales@officeplus.co.in · cc finance@", date: "Jun 06 · 15:47",
+      body: "<p>Hi,</p><p>Two of the six K2 chairs arrived with damaged castors — they wobble and one doesn't lock. Photos attached. We would like replacements or an adjustment on the invoice before we release payment.</p><p class='sig'>Neha Kapoor · Admin, Meridian Staffing LLP</p>" },
+    { fn: "OfficePlus Trading", fa: "sales@officeplus.co.in", to: "neha.kapoor@ · cc finance@", date: "Jun 10 · 10:05",
+      att: { name: "credit_note_CN-118.pdf", size: "44 KB", doc: "doc-cn" },
+      quoted: "<p>Two of the six K2 chairs arrived with damaged castors — they wobble and one doesn't lock…</p>",
+      body: "<p>Dear Ms Kapoor,</p><p>Apologies for the trouble. Replacement castor sets are being couriered today. As a goodwill adjustment we have issued credit note " + ev("b-cn-num", "CN-118") + " for " + ev("b-cn-amt", "₹4,800.00") + " (5% of the invoice value) against invoice #4471. Balance payable is ₹91,200.00.</p><p class='sig'>OfficePlus Trading Co.</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 04 · 11:32", x: "Invoice <strong>#4471</strong> · ₹96,000.00 · matches delivery challan DC-9982. Posted as <strong>V-605</strong>, payment queued at net 30.",
+      vch: [["Dr · Office & facilities", "96,000.00"], ["Cr · Accounts payable · OfficePlus", "96,000.00"]] },
+    { k: "warn", b: "CHECKING", t: "Jun 06 · 16:01", x: "Dispute opened on the thread — two damaged chairs. Payment release <strong>paused</strong>; invoice stays posted, marked disputed.",
+      ev: "neha.kapoor: “we would like replacements or an adjustment… before we release payment”" },
+    { k: "", b: "RESOLVED", t: "Jun 10 · 10:18", x: "Vendor issued <strong>CN-118 · ₹4,800.00</strong> (5%). Credit note posted as <strong>V-612</strong>, dispute closed, balance ₹91,200.00 released to the payment queue.",
+      vch: [["Dr · Accounts payable · OfficePlus", "4,800.00"], ["Cr · Office & facilities", "4,800.00"]] }
+  ] },
+
+{ id: "deskworks", d: 9.05, date: "Jun 09", fromName: "DeskWorks Estates", from: "accounts@deskworks.co.in",
+  subj: "Invoice DW-3307 — office lease", flag: "caught",
+  msgs: [
+    { fn: "DeskWorks Estates", fa: "accounts@deskworks.co.in", to: "finance@meridianstaffing.in", date: "Jun 05 · 10:12",
+      att: { name: "invoice_DW-3307.pdf", size: "68 KB", doc: "doc-dw" },
+      body: "<p>Dear Sir,</p><p>Please find attached tax invoice " + ev("b-dw-num", "DW-3307") + " towards office lease for the " + ev("b-dw-period", "May–Jun 2026 period") + ", amounting to " + ev("b-dw-amt", "₹1,80,000.00") + ". Kindly arrange payment at the earliest.</p><p class='sig'>Accounts, DeskWorks Estates Pvt. Ltd.</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "accounts@deskworks.co.in · cc priya.deshmukh@", date: "Jun 05 · 10:26",
+      body: "<p>Hello,</p><p>Invoice DW-3307 appears to duplicate invoice " + ev("b-dw-prior", "DW-3291") + ", which covered the same May–Jun 2026 lease period for the same amount and was paid on " + ev("b-dw-paid", "May 8, 2026") + " (NEFT UTR KNBN2612808441). Could you confirm whether DW-3307 should be withdrawn, or explain what it covers that DW-3291 did not?</p><p>We are holding it unpaid in the meantime.</p><p class='sig'>Books agent, on behalf of Meridian Staffing LLP finance</p>" },
+    { fn: "DeskWorks Estates", fa: "accounts@deskworks.co.in", to: "finance@meridianstaffing.in", date: "Jun 09 · 12:40",
+      quoted: "<p>Invoice DW-3307 appears to duplicate invoice DW-3291, which covered the same May–Jun 2026 lease period…</p>",
+      body: "<p>Dear Sir,</p><p>You are right — our billing system re-raised the May–Jun invoice under a new number during a software migration. Please " + ev("b-dw-disregard", "disregard DW-3307") + "; no amount is due against it. Apologies for the confusion.</p><p class='sig'>Accounts, DeskWorks Estates Pvt. Ltd.</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 05 · 10:19", x: "Invoice <strong>DW-3307</strong> · DeskWorks Estates · <strong>₹1,80,000.00</strong> · lease, May–Jun 2026." },
+    { k: "warn", b: "CHECKING", t: "Jun 05 · 10:19", x: "Same amount, same lease period as <strong>DW-3291</strong> — which was <strong>paid May 8</strong>. New number, same bill.",
+      ev: "DW-3291 · ₹1,80,000.00 · period May–Jun 2026 · paid 2026-05-08 · NEFT UTR KNBN2612808441" },
+    { k: "bad", b: "CAUGHT", t: "Jun 05 · 10:26", x: "<strong>Not posted. Not paid.</strong> Wrote back to the vendor and flagged Meridian's accountant, who had already posted it to rent. Vendor confirmed on Jun 09: duplicate. <strong>₹1,80,000.00 kept.</strong>" }
+  ] },
+
+{ id: "resend", d: 6.1, date: "Jun 06", fromName: "Northwind Accounts Payable", from: "ap@northwindlogistics.in",
+  subj: "Request — copy of invoice INV-2093",
+  msgs: [
+    { fn: "Northwind Accounts Payable", fa: "ap@northwindlogistics.in", to: "finance@meridianstaffing.in", date: "Jun 05 · 16:55",
+      body: "<p>Hi team,</p><p>Our scanning vendor has misplaced the original of your invoice " + ev("b-rs-num", "INV-2093") + " (April services). Could you resend a copy so we can complete the payment run this week?</p><p class='sig'>Accounts Payable · Northwind Logistics Ltd</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "ap@northwindlogistics.in", date: "Jun 06 · 08:03",
+      att: { name: "INV-2093_copy.pdf", size: "71 KB", doc: "doc-2093" },
+      quoted: "<p>Could you resend a copy so we can complete the payment run this week?</p>",
+      body: "<p>Hello,</p><p>Copy of INV-2093 attached — April 2026 services, " + ev("b-rs-amt", "₹15,40,000.00") + ", due May 30. As of today it is unpaid on our ledger; your statement of account is also attached for reconciliation.</p><p class='sig'>Books agent, on behalf of Meridian Staffing LLP finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 05 · 17:02", x: "Northwind asked for a copy of <strong>INV-2093</strong>. Located in the invoice archive; due date lapsed May 30." },
+    { k: "", b: "POSTED", t: "Jun 06 · 08:03", x: "Copy re-sent with a statement of account, same morning. No voucher — nothing moved yet. Payment landed three days later (see the bank alert of Jun 09)." }
+  ] },
+
+{ id: "airtel", d: 6, date: "Jun 06", fromName: "Airtel Business", from: "ebill@airtel-business.in",
+  subj: "Airtel Business e-bill — account 121-99887, June 2026",
+  msgs: [
+    { fn: "Airtel Business", fa: "ebill@airtel-business.in", to: "finance@meridianstaffing.in", date: "Jun 06 · 07:15",
+      body: "<p>Dear Customer,</p><p>Your Airtel Business bill for account 121-99887 (internet leased line + 12 corporate SIMs) is ready. Amount due: " + ev("ev-airtel", "₹21,240.00") + ", payable by June 20. The amount will be collected by standing instruction.</p><p class='sig'>Airtel Business</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 06 · 07:30", x: "Airtel Business · <strong>₹21,240.00</strong> · leased line + 12 SIMs, June. Within ₹300 of the 6-month average.",
+      ev: "prior 6 bills: 21,080 · 21,240 · 20,980 · 21,400 · 21,240 · 21,120" },
+    { k: "", b: "POSTED", t: "Jun 06 · 07:31", x: "Posted as <strong>V-606</strong> against the standing instruction.",
+      vch: [["Dr · Communication", "21,240.00"], ["Cr · Accounts payable · Airtel", "21,240.00"]] }
+  ] },
+
+{ id: "securelife", d: 7, date: "Jun 07", fromName: "SecureLife Insurance", from: "corporate@securelife.co.in",
+  subj: "Group medical policy GMP-88412 — renewal premium receipt",
+  msgs: [
+    { fn: "SecureLife Insurance", fa: "corporate@securelife.co.in", to: "finance@meridianstaffing.in", date: "Jun 07 · 12:20",
+      body: "<p>Dear Policyholder,</p><p>We confirm receipt of the renewal premium of " + ev("ev-sl-amt", "₹48,500.00") + " for group medical policy GMP-88412 covering 40 lives, period Jul 2026 – Jun 2027. The premium was collected by NEFT mandate on June 7.</p><p>Your renewed policy schedule follows within 7 working days.</p><p class='sig'>SecureLife Insurance Co.</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 07 · 12:34", x: "Group medical renewal · <strong>₹48,500.00</strong> · 40 lives — matches current headcount. Collected by mandate on Jun 07.",
+      ev: "policy GMP-88412 · last year's premium ₹46,200 · +5.0% on renewal" },
+    { k: "", b: "POSTED", t: "Jun 07 · 12:35", x: "Posted as <strong>V-607</strong>.",
+      vch: [["Dr · Insurance", "48,500.00"], ["Cr · Bank — KN current a/c", "48,500.00"]] }
+  ] },
+
+{ id: "cityserve", d: 8, date: "Jun 08", fromName: "CityServe Facilities", from: "billing@cityserve.in",
+  subj: "June service invoice — housekeeping & facilities",
+  msgs: [
+    { fn: "CityServe Facilities", fa: "billing@cityserve.in", to: "finance@meridianstaffing.in", date: "Jun 08 · 09:48",
+      body: "<p>Dear Sir/Madam,</p><p>Our invoice for June housekeeping, pantry staffing and facilities management services at your Sector 62 office comes to " + ev("ev-cse-amt", "₹64,900.00") + ", as per the annual service contract dated Jan 5, 2026. Kindly process at the usual net-15 terms.</p><p class='sig'>CityServe Facilities Pvt. Ltd.</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 08 · 10:02", x: "CityServe · <strong>₹64,900.00</strong> · June services. Exactly the contract rate; fifth identical monthly bill.",
+      ev: "contract dt. 2026-01-05 · ₹64,900/month · prior payments Feb–May all ₹64,900.00" },
+    { k: "", b: "POSTED", t: "Jun 08 · 10:03", x: "Posted as <strong>V-608</strong>, payment queued at net 15.",
+      vch: [["Dr · Office & facilities", "64,900.00"], ["Cr · Accounts payable · CityServe", "64,900.00"]] }
+  ] },
+
+{ id: "northwind-pay", d: 9, date: "Jun 09", fromName: "KN Bank Alerts", from: "alerts@knbank.in",
+  subj: "Credit alert — NEFT ₹15,40,000.00 received",
+  msgs: [
+    { fn: "KN Bank Alerts", fa: "alerts@knbank.in", to: "finance@meridianstaffing.in", date: "Jun 09 · 11:26",
+      body: "<p>Dear Customer,</p><p>Your current account ····0417 has been credited with " + ev("ev-nw-credit", "₹15,40,000.00") + " by NEFT on 09-06-2026, 11:24 IST.</p><p>Remitter: NORTHWIND LOGISTICS LTD · Remarks: " + ev("b-nw-ref", "INV2093 APRIL SERVICES") + " · UTR NWIN2616009917.</p><p class='sig'>KN Bank — do not reply to this alert</p>" }
+  ],
+  trail: [
+    { k: "", b: "MATCHED", t: "Jun 09 · 11:30", x: "Credit of <strong>₹15,40,000.00</strong> matched to open receivable <strong>INV-2093</strong> — remitter, remarks and amount all agree. 41 days from invoice to cash.",
+      ev: "INV-2093 · ₹15,40,000.00 · issued Apr 30 · due May 30 · copy re-requested by their AP on Jun 05" },
+    { k: "", b: "POSTED", t: "Jun 09 · 11:31", x: "Posted as <strong>V-609</strong>; INV-2093 closed.",
+      vch: [["Dr · Bank — KN current a/c", "15,40,000.00"], ["Cr · Accounts receivable · Northwind", "15,40,000.00"]] }
+  ] },
+
+{ id: "wanderline", d: 10, date: "Jun 10", fromName: "Wanderline Travels", from: "corporate@wanderline.in",
+  subj: "Invoice WT-2288 — group booking, Atlas Retail rollout",
+  msgs: [
+    { fn: "Wanderline Travels", fa: "corporate@wanderline.in", to: "finance@meridianstaffing.in", date: "Jun 10 · 13:05",
+      body: "<p>Dear Team,</p><p>Invoice WT-2288 for the group booking made on June 8 — four sectors for the Atlas Retail store-systems rollout (Bengaluru–Mumbai, Jun 15–19, 4 travellers) — totals " + ev("ev-wl-amt", "₹76,400.00") + ", net 15.</p><p>Ticket-wise breakup is in the annexure on request.</p><p class='sig'>Wanderline Travels · corporate desk</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 10 · 13:20", x: "Wanderline · <strong>₹76,400.00</strong> · 4 travellers, Atlas rollout. All four names are on the Atlas deployment roster; travel is billable under the Atlas MSA.",
+      ev: "travellers: T. Banerjee, F. Khan, C. Bose, M. Rane · all deployed, Atlas Retail" },
+    { k: "", b: "POSTED", t: "Jun 10 · 13:21", x: "Posted as <strong>V-611</strong>, tagged billable to Atlas for the July invoice cycle.",
+      vch: [["Dr · Travel & stay", "76,400.00"], ["Cr · Accounts payable · Wanderline", "76,400.00"]] }
+  ] },
+
+{ id: "trip", d: 13.5, date: "Jun 13", fromName: "Rahul Mehta", from: "rahul.mehta@meridianstaffing.in",
+  subj: "Trip receipts — Delhi, Jun 10 (Atlas review)", flag: "mismatch",
+  msgs: [
+    { fn: "Rahul Mehta", fa: "rahul.mehta@meridianstaffing.in", to: "finance@meridianstaffing.in", date: "Jun 12 · 18:22",
+      att: { name: "meridian_air_receipt.pdf", size: "39 KB", doc: "doc-trip" },
+      body: "<p>Hi finance,</p><p>Receipts from the Delhi trip on the 10th (Atlas quarterly review): flight receipt attached, hotel was on the corporate card. One cab I had to pay from my own pocket — " + ev("ev-cab-amt", "₹4,210") + " (Indira Gandhi Airport to Gurgaon and back, screenshots attached). Please reimburse.</p><p class='sig'>Rahul</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "rahul.mehta@meridianstaffing.in", date: "Jun 13 · 09:10",
+      quoted: "<p>Receipts from the Delhi trip on the 10th… flight receipt attached, hotel was on the corporate card…</p>",
+      body: "<p>Hi Rahul,</p><p>Reimbursement of ₹4,210 for the cab is posted and will go out with the next payment run.</p><p>One thing does not line up: the attached flight receipt shows a fare of " + ev("b-trip-rcpt", "₹12,500.00") + ", but the corporate card was charged " + ev("b-trip-chg", "₹17,500.00") + " by Meridian Air on Jun 10. Was there a date change, seat or baggage fee that has a separate receipt? Whatever document exists, please send it — the difference of ₹5,000 stays unposted until then.</p><p class='sig'>Books agent, Meridian finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 12 · 18:31", x: "Trip documents from R. Mehta: flight receipt ₹12,500.00, personally paid cab ₹4,210 with screenshots. Hotel folio already matched to the card." },
+    { k: "", b: "POSTED", t: "Jun 13 · 09:10", x: "Cab reimbursement posted as <strong>V-622</strong>.",
+      vch: [["Dr · Travel & stay", "4,210.00"], ["Cr · Bank — KN current a/c", "4,210.00"]] },
+    { k: "warn", b: "MISMATCH", t: "Jun 13 · 09:10", x: "Receipt reads <strong>₹12,500.00</strong>; the card was charged <strong>₹17,500.00</strong>. Written question sent with both documents attached. <strong>₹5,000.00 held unposted.</strong>",
+      ev: "meridian_air_receipt.pdf: ₹12,500.00 · card statement line, Jun 10: ₹17,500.00 · Δ ₹5,000.00" }
+  ] },
+
+{ id: "card-stmt", d: 12, date: "Jun 12", fromName: "KN Bank Cards", from: "statements@knbank-cards.in",
+  subj: "Corporate card statement — June cycle (34 transactions)", flag: "mismatch",
+  msgs: [
+    { fn: "KN Bank Cards", fa: "statements@knbank-cards.in", to: "finance@meridianstaffing.in", date: "Jun 12 · 08:00",
+      att: { name: "card_statement_jun2026.pdf", size: "156 KB", doc: "doc-card" },
+      body: "<p>Dear Cardholder,</p><p>The statement for corporate card ····5522 (cycle Jun 01 – Jun 28, generated mid-cycle at your configured frequency) is attached: " + ev("b-card-count", "34 transactions") + " totalling " + ev("b-card-total", "₹4,83,600.00") + ". Autopay is scheduled for Jul 04 from current a/c ····0417.</p><p class='sig'>KN Bank Cards</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 12 · 08:09", x: "34 lines read from the statement. Receipts hunted across the mailbox: vendor invoices, e-receipts, booking confirmations." },
+    { k: "", b: "POSTED", t: "Jun 12 · 08:14", x: "<strong>31 of 34</strong> lines matched to documents already in the mailbox and posted in one pass (vouchers <strong>C-601…C-631</strong>). ₹4,40,410.00 of spend, each line traceable.",
+      ev: "largest: AWS ₹1,02,400.00 → invoice AWSIN-26-58821 · LinkedIn ₹44,500.00 → renewal order · Datadog ₹38,600.00 → plan invoice" },
+    { k: "warn", b: "QUESTION", t: "Jun 13 · 09:05", x: "2 lines had no receipt anywhere in the mailbox — Amazon Business ₹5,480.00 (Jun 09) and Uber ₹2,710.00 (Jun 12). Written requests sent to the buyers. Posted on Jun 15 when the receipts arrived." },
+    { k: "bad", b: "MISMATCH", t: "Jun 13 · 09:10", x: "1 line does not match its receipt: Meridian Air <strong>₹17,500.00</strong> charged vs <strong>₹12,500.00</strong> receipted. Held as exception <strong>EX-2</strong>; ₹5,000.00 protected until explained." }
+  ] },
+
+{ id: "orbit-po", d: 13, date: "Jun 13", fromName: "Orbit Systems Procurement", from: "procurement@orbitsystems.in",
+  subj: "PO ORB-556 — QA engineering support, June 2026", unread: true,
+  msgs: [
+    { fn: "Orbit Systems Procurement", fa: "procurement@orbitsystems.in", to: "finance@meridianstaffing.in", date: "Jun 13 · 14:40",
+      body: "<p>Dear Meridian team,</p><p>Please find our purchase order " + ev("b-orb-po", "ORB-556") + " confirming QA engineering support for June 2026 — " + ev("b-orb-heads", "5 consultants") + " at the agreed blended rate, monthly value " + ev("b-orb-amt", "₹8,75,000.00") + ". Invoice at month end referencing this PO.</p><p class='sig'>Procurement · Orbit Systems Pvt. Ltd.</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 13 · 14:52", x: "PO <strong>ORB-556</strong> filed against the Orbit engagement — 5 consultants, ₹8,75,000.00/month. Matches the 5 Orbit names on the deployment roster.",
+      ev: "roster: S. Rao, J. Thomas, B. Das, A. Pillai, P. Dutta · Orbit Systems" },
+    { k: "", b: "CHECKING", t: "Jun 13 · 14:52", x: "No entry to make yet. The PO becomes the reference for the month-end invoice draft (see invoice cycle 2, Jun 29)." }
+  ] },
+
+{ id: "receipts", d: 15.2, date: "Jun 15", fromName: "Nien books agent", from: "books-agent@meridianstaffing.in",
+  subj: "Receipts needed — 2 card purchases (Jun 09, Jun 12)",
+  msgs: [
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "neha.kapoor@ · uday.singh@", date: "Jun 13 · 09:05",
+      body: "<p>Hi Neha, Uday,</p><p>Two card charges have no receipt anywhere on the finance mailbox:</p><p>· Neha — Amazon Business, Jun 09, ₹5,480 (office supplies?)<br>· Uday — Uber, Jun 12, ₹2,710</p><p>Please forward the invoice or e-receipt for each. The lines stay unposted until then.</p><p class='sig'>Books agent, Meridian finance</p>" },
+    { fn: "Neha Kapoor", fa: "neha.kapoor@meridianstaffing.in", to: "books-agent@meridianstaffing.in", date: "Jun 15 · 10:12",
+      body: "<p>Attached — Amazon Business tax invoice for " + ev("ev-r-amazon", "₹5,480.00") + ", stationery and printer toner for the office. Sorry, it went to my personal inbox.</p><p class='sig'>Neha</p>" },
+    { fn: "Uday Singh", fa: "uday.singh@meridianstaffing.in", to: "books-agent@meridianstaffing.in", date: "Jun 15 · 13:44",
+      body: "<p>Uber receipt attached — " + ev("ev-r-uber", "₹2,710.00") + ", client visit to Atlas Retail's Whitefield office on Jun 12 (round trip).</p><p class='sig'>Uday</p>" }
+  ],
+  trail: [
+    { k: "warn", b: "QUESTION", t: "Jun 13 · 09:05", x: "Written asks sent to the two buyers. The agent never posts a card line without a document behind it." },
+    { k: "", b: "POSTED", t: "Jun 15 · 13:50", x: "Both receipts arrived; both lines posted (<strong>C-632, C-633</strong>). The card batch now stands at 33 posted of 34 — the last line is the Meridian Air mismatch, held as EX-2.",
+      vch: [["Dr · Office & facilities", "5,480.00"], ["Dr · Travel & stay", "2,710.00"], ["Cr · Corporate card payable", "8,190.00"]] }
+  ] },
+
+{ id: "cycle1", d: 16.2, date: "Jun 16", fromName: "Nien books agent", from: "books-agent@meridianstaffing.in",
+  subj: "Invoice cycle 1 — Northwind, June (draft for sign-off)",
+  msgs: [
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "priya.deshmukh@meridianstaffing.in", date: "Jun 14 · 08:30",
+      att: { name: "INV-2107_draft.pdf", size: "63 KB", doc: "doc-2107" },
+      body: "<p>Priya,</p><p>Draft invoice <strong>INV-2107</strong> to Northwind Logistics is attached — " + ev("b-c1-heads", "13 consultants") + " on the June roster, per the MSA rate card, total " + ev("b-c1-amt", "₹38,50,000.00") + ". Every line is backed by a deployment record; no timesheet on this account is pending approval.</p><p>It goes out only on your sign-off.</p><p class='sig'>Books agent, Meridian finance</p>" },
+    { fn: "Priya Deshmukh", fa: "priya.deshmukh@meridianstaffing.in", to: "books-agent@meridianstaffing.in", date: "Jun 16 · 09:41",
+      quoted: "<p>Draft invoice INV-2107 to Northwind Logistics is attached — 13 consultants on the June roster…</p>",
+      body: "<p>Checked against the roster — " + ev("b-c1-appr", "approved, send it") + ".</p><p class='sig'>Priya Deshmukh · Finance lead</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "ap@northwindlogistics.in", date: "Jun 16 · 10:02",
+      body: "<p>Dear Northwind AP,</p><p>Invoice INV-2107 for June 2026 staff augmentation (₹38,50,000.00, net 30) is attached. Kindly acknowledge receipt — and note your scanning vendor misplaced our last one.</p><p class='sig'>Meridian Staffing LLP finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "DRAFTED", t: "Jun 14 · 08:30", x: "INV-2107 assembled from the June deployment roster: 13 Northwind names, rate card applied, ₹38,50,000.00. Staged for Priya — the agent drafts, a person signs." },
+    { k: "", b: "POSTED", t: "Jun 16 · 10:02", x: "Sign-off received; invoice sent and posted as <strong>V-613</strong>.",
+      vch: [["Dr · Accounts receivable · Northwind", "38,50,000.00"], ["Cr · Staffing revenue", "38,50,000.00"]] }
+  ] },
+
+{ id: "bses", d: 16, date: "Jun 16", fromName: "BSES Rajdhani", from: "ebill@bsesdelhi.in",
+  subj: "Electricity e-bill — CA no. 154220861, May 2026",
+  msgs: [
+    { fn: "BSES Rajdhani", fa: "ebill@bsesdelhi.in", to: "finance@meridianstaffing.in", date: "Jun 16 · 06:05",
+      body: "<p>Dear Consumer,</p><p>Your electricity bill for CA no. 154220861 (May 2026 consumption, 4th floor, Tower B, Sector 62) amounts to " + ev("ev-bses-amt", "₹42,318.00") + ", due June 26. The amount will be collected by registered auto-debit on the bill date.</p><p class='sig'>BSES Rajdhani Power Ltd</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 16 · 06:22", x: "Electricity · <strong>₹42,318.00</strong> · May consumption. Seasonal rise over April (₹36,540) consistent with last year's May.",
+      ev: "May 2025 bill: ₹41,870 · Apr 2026: ₹36,540 · units 5,120 vs 4,410" },
+    { k: "", b: "POSTED", t: "Jun 16 · 06:23", x: "Posted as <strong>V-614</strong> against the auto-debit.",
+      vch: [["Dr · Utilities", "42,318.00"], ["Cr · Bank — KN current a/c", "42,318.00"]] }
+  ] },
+
+{ id: "vertex", d: 17, date: "Jun 17", fromName: "Vertex Supplies", from: "accounts@vertex-supplies.com",
+  subj: "Invoice #5512 + updated bank details", flag: "blocked",
+  msgs: [
+    { fn: "Vertex Supplies", fa: "accounts@vertex-supplies.com", to: "finance@meridianstaffing.in", date: "Jun 17 · 11:52",
+      att: { name: "invoice_5512.pdf", size: "94 KB", doc: "doc-vx" },
+      body: "<p>Dear Sir,</p><p>Please find attached invoice " + ev("b-vx-num", "#5512") + " for the networking hardware supplied against " + ev("b-vx-po", "PO-2231") + ", totalling " + ev("b-vx-amt", "₹7,45,000.00") + " inclusive of IGST.</p><p>Kindly note we have recently changed banks. " + ev("b-vx-bank", "Please remit to our new account ····7742, IFSC HDFC0004XX") + ", as printed on the invoice. Payments to the old account may be delayed in reconciliation.</p><p class='sig'>Accounts, Vertex Supplies Pvt Ltd</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "priya.deshmukh@meridianstaffing.in", date: "Jun 17 · 12:04",
+      body: "<p>Priya,</p><p>Vertex invoice #5512 checks out against PO-2231 and the goods receipt — the liability is posted. The payment is <strong>blocked</strong>: the email asks us to remit to a new account (····7742, HDFC) while all " + ev("b-vx-prior", "11 previous payments went to ····3391, ICICI") + ".</p><p>Please have someone call Vertex on the number in our vendor master — <strong>not any number from this email</strong> — and confirm the change verbally before the block is lifted. This pattern is the most common invoice-fraud entry point.</p><p class='sig'>Books agent, Meridian finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 17 · 11:58", x: "Invoice <strong>#5512</strong> · Vertex Supplies · <strong>₹7,45,000.00</strong> incl. IGST · matches PO-2231 and goods receipt of Jun 14." },
+    { k: "warn", b: "PROVENANCE", t: "Jun 17 · 11:59", x: "Sender authentication passes — but the beneficiary account differs from <strong>11 prior payments</strong> to this vendor.",
+      ev: "vendor master: A/C ····3391 · ICICI · unchanged since Aug 2024 — email: A/C ····7742 · HDFC · rule: bank-detail change ⇒ hold for callback verification" },
+    { k: "", b: "POSTED", t: "Jun 17 · 12:00", x: "Liability posted as <strong>V-615</strong> — the debt is real even if the bank detail is not.",
+      vch: [["Dr · Computers & equipment", "6,31,356.00"], ["Dr · GST input credit", "1,13,644.00"], ["Cr · Accounts payable · Vertex", "7,45,000.00"]] },
+    { k: "bad", b: "HELD", t: "Jun 17 · 12:04", x: "<strong>Payment blocked.</strong> No money moves until a person confirms the new account by phone on the number on file. Open as exception <strong>EX-4</strong>." }
+  ] },
+
+{ id: "computehub", d: 18, date: "Jun 18", fromName: "Compute Hub", from: "billing@computehub.in",
+  subj: "Invoice CH-26-1104 — 2 laptops against PO-2238", unread: true,
+  msgs: [
+    { fn: "Compute Hub", fa: "billing@computehub.in", to: "finance@meridianstaffing.in", date: "Jun 18 · 15:12",
+      att: { name: "invoice_CH-26-1104.pdf", size: "88 KB", doc: "doc-ch" },
+      body: "<p>Dear Team,</p><p>Invoice " + ev("b-ch-num", "CH-26-1104") + " is attached for the two ThinkBook 14 G7 units delivered on June 17 against " + ev("b-ch-po", "PO-2238") + " (new joiner hardware). Total " + ev("b-ch-amt", "₹1,84,000.00") + " inclusive of IGST, net 15.</p><p class='sig'>Compute Hub India Pvt Ltd</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 18 · 15:26", x: "Invoice <strong>CH-26-1104</strong> · ₹1,84,000.00 · matches PO-2238 and the delivery note. Bank details unchanged from 6 prior payments — no hold needed.",
+      ev: "PO-2238 · 2 × ThinkBook 14 G7 · ₹92,000/unit incl. tax · beneficiary ····2216 unchanged" },
+    { k: "", b: "POSTED", t: "Jun 18 · 15:27", x: "Posted as <strong>V-616</strong>; asset register updated with both serial numbers.",
+      vch: [["Dr · Computers & equipment", "1,55,932.00"], ["Dr · GST input credit", "28,068.00"], ["Cr · Accounts payable · Compute Hub", "1,84,000.00"]] }
+  ] },
+
+{ id: "helix-pay", d: 19, date: "Jun 19", fromName: "Helix Pharma AP", from: "payments@helixpharma.in",
+  subj: "Payment advice — ₹12,00,000.00 against INV-2095",
+  msgs: [
+    { fn: "Helix Pharma AP", fa: "payments@helixpharma.in", to: "finance@meridianstaffing.in", date: "Jun 19 · 16:33",
+      body: "<p>Dear Supplier,</p><p>We have released payment of " + ev("ev-hx-credit", "₹12,00,000.00") + " by NEFT (UTR HELX2617011230) against your invoice " + ev("b-hx-inv", "INV-2095") + " dated May 31, 2026. Please confirm receipt and update your records.</p><p class='sig'>Accounts Payable · Helix Pharma Ltd</p>" }
+  ],
+  trail: [
+    { k: "", b: "MATCHED", t: "Jun 19 · 16:41", x: "Advice matched to open receivable <strong>INV-2095</strong> (May cycle, Helix) and to the bank credit that landed at 16:38 — amount and UTR agree.",
+      ev: "INV-2095 · ₹12,00,000.00 · issued May 31 · bank credit UTR HELX2617011230 · 19 days to cash" },
+    { k: "", b: "POSTED", t: "Jun 19 · 16:42", x: "Posted as <strong>V-617</strong>; INV-2095 closed. Receipt confirmation sent to Helix AP.",
+      vch: [["Dr · Bank — KN current a/c", "12,00,000.00"], ["Cr · Accounts receivable · Helix", "12,00,000.00"]] }
+  ] },
+
+{ id: "sharma", d: 20, date: "Jun 20", fromName: "Sharma & Associates", from: "office@sharma-ca.in",
+  subj: "May compliance done — fee note + TDS & GST challans",
+  msgs: [
+    { fn: "Sharma & Associates", fa: "office@sharma-ca.in", to: "finance@meridianstaffing.in", date: "Jun 20 · 10:15",
+      att: { name: "fee_note_and_challans.pdf", size: "203 KB", doc: "doc-challans" },
+      body: "<p>Dear Priya ji,</p><p>May 2026 compliance is complete. Attached in one file: our fee note (" + ev("b-sh-fee", "₹35,000.00") + "), the TDS challan for " + ev("b-sh-tds", "₹2,84,000.00") + " (sections 192, 194C, 194J) and the GSTR-3B challan for " + ev("b-sh-gst", "₹5,61,000.00") + ". Both statutory amounts were debited from your KN Bank account on June 19.</p><p class='sig'>Sharma &amp; Associates · Chartered Accountants</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 20 · 10:28", x: "Three documents in one attachment: fee note ₹35,000.00, TDS challan ₹2,84,000.00, GST challan ₹5,61,000.00. Both challan debits found on the bank feed, Jun 19.",
+      ev: "bank feed: 19-06 DR 2,84,000.00 “TDS 0281…” · 19-06 DR 5,61,000.00 “GSTN PMT…”" },
+    { k: "", b: "POSTED", t: "Jun 20 · 10:30", x: "Three vouchers posted: <strong>V-618</strong> (fee), <strong>V-619</strong> (TDS payable cleared), <strong>V-620</strong> (GST payable cleared).",
+      vch: [["Dr · Professional fees", "35,000.00"], ["Dr · TDS payable", "2,84,000.00"], ["Dr · GST payable", "5,61,000.00"]] }
+  ] },
+
+{ id: "talentbridge", d: 21, date: "Jun 21", fromName: "TalentBridge", from: "billing@talentbridge.in",
+  subj: "Renewal receipt — TalentBridge hiring platform, FY 2026-27",
+  msgs: [
+    { fn: "TalentBridge", fa: "billing@talentbridge.in", to: "finance@meridianstaffing.in", date: "Jun 21 · 09:20",
+      body: "<p>Hello,</p><p>Thanks for renewing TalentBridge Recruiter (3 seats). Your payment of " + ev("ev-tb-amt", "₹59,000.00") + " for the Jul 2026 – Jun 2027 term was collected against the standing purchase order today. The tax invoice is available in your billing portal and attached to this email.</p><p class='sig'>TalentBridge · billing</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 21 · 09:35", x: "TalentBridge renewal · <strong>₹59,000.00</strong> · 3 recruiter seats, annual. Same price as last year; renewal was pre-approved in the March budget note.",
+      ev: "FY25-26 renewal: ₹59,000.00 · budget note 2026-03-14: “renew, cap ₹65,000”" },
+    { k: "", b: "POSTED", t: "Jun 21 · 09:36", x: "Posted as <strong>V-621</strong>.",
+      vch: [["Dr · Recruitment", "59,000.00"], ["Cr · Accounts payable · TalentBridge", "59,000.00"]] }
+  ] },
+
+{ id: "collections", d: 23, date: "Jun 23", fromName: "Nien books agent", from: "books-agent@meridianstaffing.in",
+  subj: "Overdue — INV-2101, Atlas Retail (reminder drafted)", unread: true,
+  msgs: [
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "priya.deshmukh@meridianstaffing.in", date: "Jun 23 · 08:45",
+      body: "<p>Priya,</p><p><strong>INV-2101</strong> to Atlas Retail (" + ev("b-col-amt", "₹18,20,000.00") + ", May services) fell due on May 30 and is now " + ev("b-col-od", "24 days overdue") + ". Context from the mailbox before you decide the tone:</p><p>· Atlas disputed two line items on INV-2089 in March; that closed with credit note CN-097 and they paid the balance within a week.<br>· Their AP has paid the last four invoices 15–20 days late on average — slow, not silent.<br>· There is no open dispute on INV-2101; their AP acknowledged receipt on May 04.</p><p>A first reminder is drafted below. It goes out only if you approve.</p><p class='sig'>Books agent, Meridian finance</p>",
+      quoted: "<p><strong>Draft:</strong> Dear Atlas Retail AP — our invoice INV-2101 (₹18,20,000.00, May 2026 services) fell due on May 30 and remains unpaid. You acknowledged receipt on May 04 and we are not aware of any query on it. Could you confirm the scheduled payment date? Statement of account attached. — Meridian Staffing LLP finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "CHECKING", t: "Jun 23 · 08:44", x: "Receivable ageing ran overnight: INV-2101 crossed the 21-day-overdue threshold. Dispute history and payment behaviour pulled from the thread archive — the reminder cites facts, not guesses." },
+    { k: "warn", b: "QUESTION", t: "Jun 23 · 08:45", x: "First reminder <strong>drafted, not sent</strong>. Collections mail goes out only over a person's approval. No voucher — nothing moved." }
+  ] },
+
+{ id: "timesheet", d: 24, date: "Jun 24", fromName: "Dev Krishnan", from: "dev.krishnan@contractors.meridianstaffing.in",
+  subj: "Timesheet — June (Dev Krishnan, Atlas Retail)", flag: "held",
+  msgs: [
+    { fn: "Dev Krishnan", fa: "dev.krishnan@contractors.meridianstaffing.in", to: "finance@meridianstaffing.in", date: "Jun 24 · 19:05",
+      att: { name: "timesheet_june_dev-krishnan.xlsx", size: "18 KB", doc: "doc-ts" },
+      body: "<p>Hi,</p><p>June timesheet attached — " + ev("b-ts-days", "23 days") + " on the Atlas Retail store-systems project, period 26 May to 25 June. Please process with this month's payroll.</p><p class='sig'>Dev Krishnan</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "rohit.malhotra@meridianstaffing.in", date: "Jun 24 · 19:22",
+      body: "<p>Hi Rohit,</p><p>Dev Krishnan's June timesheet (23 days, Atlas Retail, ₹1,49,500) has " + ev("b-ts-noappr", "no manager approval on the thread") + " — the approval cell is blank and there is no sign-off mail from you this cycle. Everything else checks out: rate matches his contract, and he is on the Atlas deployment roster.</p><p>Payroll is staged on the 28th. Approve or amend before then?</p><p class='sig'>Books agent, Meridian finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 24 · 19:14", x: "Timesheet · Dev Krishnan · <strong>23 days</strong> · Atlas Retail · ₹6,500/day ⇒ ₹1,49,500.00.",
+      ev: "rate on file: ₹6,500/day (contract dt. 2025-11-03) ✓ · deployment roster: Atlas Retail ✓ · manager approval: none ✗" },
+    { k: "warn", b: "HELD", t: "Jun 24 · 19:15", x: "<strong>Not staged for payroll.</strong> The one missing fact is an approval, and the agent does not guess approvals." },
+    { k: "warn", b: "QUESTION", t: "Jun 24 · 19:22", x: "Written question sent to the approving manager, Rohit Malhotra, with the deadline stated. Open as exception <strong>EX-3</strong> until answered." }
+  ] },
+
+{ id: "ts-approve", d: 26, date: "Jun 26", fromName: "Rohit Malhotra", from: "rohit.malhotra@meridianstaffing.in",
+  subj: "Re: Timesheet — June (Dev Krishnan, Atlas Retail)", flag: "resolved",
+  msgs: [
+    { fn: "Rohit Malhotra", fa: "rohit.malhotra@meridianstaffing.in", to: "books-agent@ · cc finance@", date: "Jun 26 · 18:40",
+      quoted: "<p>Dev Krishnan's June timesheet (23 days, Atlas Retail, ₹1,49,500) has no manager approval on the thread…</p>",
+      body: "<p>My miss — I was at the Atlas site most of last week and the reminder got buried.</p><p>" + ev("ev-rohit-ok", "Approved: 23 days is correct for Dev's June cycle") + ". I cross-checked against the site attendance log. Go ahead and include him in this payroll run.</p><p class='sig'>Rohit Malhotra · Delivery manager, Atlas account</p>" }
+  ],
+  trail: [
+    { k: "", b: "READ", t: "Jun 26 · 18:47", x: "Approval received in writing from the named manager, with his verification method stated (site attendance log)." },
+    { k: "", b: "RESOLVED", t: "Jun 26 · 18:48", x: "Hold released; exception <strong>EX-3</strong> closed. Dev Krishnan's ₹1,49,500.00 enters the June payroll journal staged on Jun 28 — <strong>with</strong> its approval evidence attached. Meridian's own payroll run, made on the morning of Jun 26, had gone out without him." }
+  ] },
+
+{ id: "payroll", d: 30.2, date: "Jun 30", fromName: "Nien books agent", from: "books-agent@meridianstaffing.in",
+  subj: "Payroll — June journal staged (38 timesheets, all approved)",
+  msgs: [
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "priya.deshmukh@ · arun.mehra@", date: "Jun 28 · 07:30",
+      att: { name: "payroll_journal_june_2026.xlsx", size: "31 KB", doc: "doc-pay" },
+      body: "<p>Priya, Arun,</p><p>The June payroll journal is staged: " + ev("ev-pay-count", "38 timesheets, every one carrying a written approval") + ", rates matched to contracts on file, gross " + ev("ev-pay-total", "₹68,40,000.00") + ". One timesheet (Dev Krishnan) was approved late, on Jun 26 — the approval mail is linked to his row.</p><p>The batch pays out only when <strong>both of you</strong> approve. Nothing is scheduled until then.</p><p class='sig'>Books agent, Meridian finance</p>" },
+    { fn: "Priya Deshmukh", fa: "priya.deshmukh@meridianstaffing.in", to: "books-agent@ · arun.mehra@", date: "Jun 29 · 11:05",
+      body: "<p>Reviewed the journal against the roster and the two new joiners. " + ev("b-pay-ok1", "Approved — 1 of 2") + ".</p><p class='sig'>Priya Deshmukh · Finance lead</p>" },
+    { fn: "Arun Mehra", fa: "arun.mehra@meridianstaffing.in", to: "books-agent@ · priya.deshmukh@", date: "Jun 30 · 09:12",
+      body: "<p>" + ev("b-pay-ok2", "Approved — 2 of 2") + ". Release the batch.</p><p class='sig'>Arun Mehra · Managing partner</p>" },
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "priya.deshmukh@ · arun.mehra@", date: "Jun 30 · 10:20",
+      body: "<p>Both approvals recorded. The salary batch was released to KN Bank and the debit of " + ev("ev-pay-paid", "₹68,40,000.00") + " is confirmed on the bank feed (UTR KNBN2618100440). Payslips follow by email tonight.</p><p class='sig'>Books agent, Meridian finance</p>" }
+  ],
+  trail: [
+    { k: "", b: "STAGED", t: "Jun 28 · 07:30", x: "Journal computed from evidence: 38 approved timesheets × contracted rates. The agent assembles; the named approvers hold the pen.",
+      vch: [["Dr · Salaries & consultant costs", "68,40,000.00"], ["Cr · Salaries payable", "68,40,000.00"]] },
+    { k: "", b: "CHECKING", t: "Jun 30 · 09:12", x: "Four-eyes complete: Priya Deshmukh (Jun 29, 11:05) and Arun Mehra (Jun 30, 09:12), both in writing on this thread." },
+    { k: "", b: "POSTED", t: "Jun 30 · 10:20", x: "38 journal rows posted (<strong>P-601…P-638</strong>) and the payout posted as <strong>V-627</strong> once the bank debit confirmed.",
+      vch: [["Dr · Salaries payable", "68,40,000.00"], ["Cr · Bank — KN current a/c", "68,40,000.00"]] }
+  ] },
+
+{ id: "cycle2", d: 30.3, date: "Jun 30", fromName: "Nien books agent", from: "books-agent@meridianstaffing.in",
+  subj: "Invoice cycle 2 — Atlas, Helix, Orbit (3 drafts for sign-off)", unread: true,
+  msgs: [
+    { fn: "Nien books agent", fa: "books-agent@meridianstaffing.in", to: "priya.deshmukh@meridianstaffing.in", date: "Jun 29 · 08:15",
+      body: "<p>Priya,</p><p>Month-end invoice drafts from the June deployment rosters and approved timesheets:</p><p>· <strong>INV-2108</strong> — Atlas Retail, 10 consultants: " + ev("ev-c2-atlas", "₹21,00,000.00") + "<br>· <strong>INV-2109</strong> — Helix Pharma, 6 consultants: " + ev("ev-c2-helix", "₹14,25,000.00") + "<br>· <strong>INV-2110</strong> — Orbit Systems, 5 consultants against PO ORB-556: " + ev("ev-c2-orbit", "₹8,75,000.00") + "</p><p>Cycle total " + ev("b-c2-total", "₹44,00,000.00") + ". Dev Krishnan's late-approved timesheet is included in the Atlas draft with its approval mail linked. All three go out on your sign-off.</p><p class='sig'>Books agent, Meridian finance</p>" },
+    { fn: "Priya Deshmukh", fa: "priya.deshmukh@meridianstaffing.in", to: "books-agent@meridianstaffing.in", date: "Jun 30 · 12:30",
+      quoted: "<p>Month-end invoice drafts from the June deployment rosters and approved timesheets…</p>",
+      body: "<p>All three " + ev("b-c2-appr", "approved") + " — the Orbit one correctly references ORB-556. Send them today so they age from June.</p><p class='sig'>Priya Deshmukh · Finance lead</p>" }
+  ],
+  trail: [
+    { k: "", b: "DRAFTED", t: "Jun 29 · 08:15", x: "Three drafts assembled from rosters, timesheets and PO ORB-556 — ₹44,00,000.00 across Atlas, Helix and Orbit. Staged for sign-off." },
+    { k: "", b: "POSTED", t: "Jun 30 · 12:41", x: "Sign-off received; all three sent and posted (<strong>V-623, V-624, V-625</strong>).",
+      vch: [["Dr · Accounts receivable (3 clients)", "44,00,000.00"], ["Cr · Staffing revenue", "44,00,000.00"]] }
+  ] },
+
+{ id: "bank", d: 30.1, date: "Jun 30", fromName: "KN Bank Alerts", from: "alerts@knbank.in",
+  subj: "Account alerts — current a/c ····0417 (June)", unread: true,
+  msgs: [
+    { fn: "KN Bank Alerts", fa: "alerts@knbank.in", to: "finance@meridianstaffing.in", date: "Jun 01 · 10:05",
+      body: "<p>Dear Customer,</p><p>Your current account ····0417 has been debited with " + ev("ev-sal-may", "₹66,10,000.00") + " on 01-06-2026 towards salary batch SAL-MAY-26 (38 credits, UTR KNBN2615200112).</p><p class='sig'>KN Bank — do not reply to this alert</p>" },
+    { fn: "KN Bank Alerts", fa: "alerts@knbank.in", to: "finance@meridianstaffing.in", date: "Jun 04 · 06:10",
+      body: "<p>Dear Customer,</p><p>Two debits on your current account ····0417 on 04-06-2026:</p><p>· " + ev("ev-autopay", "₹3,29,150.00") + " — corporate card autopay, statement cycle May (card ····5522)<br>· " + ev("ev-charges", "₹1,180.00") + " — account maintenance and NEFT charges, May</p><p class='sig'>KN Bank — do not reply to this alert</p>" },
+    { fn: "KN Bank Alerts", fa: "alerts@knbank.in", to: "finance@meridianstaffing.in", date: "Jun 09 · 06:05",
+      body: "<p>Dear Customer,</p><p>Your current account ····0417 has been debited with " + ev("ev-pf", "₹5,12,000.00") + " on 09-06-2026 towards EPFO/ESIC remittance for May 2026 (ECR ref 2606094412).</p><p class='sig'>KN Bank — do not reply to this alert</p>" },
+    { fn: "KN Bank Alerts", fa: "alerts@knbank.in", to: "finance@meridianstaffing.in", date: "Jun 21 · 06:08",
+      body: "<p>Dear Customer,</p><p>Your current account ····0417 has been debited with " + ev("ev-pt", "₹7,500.00") + " on 21-06-2026 towards professional tax, May 2026 (all employees, Karnataka + NCR registrations).</p><p class='sig'>KN Bank — do not reply to this alert</p>" },
+    { fn: "KN Bank Alerts", fa: "alerts@knbank.in", to: "finance@meridianstaffing.in", date: "Jun 30 · 23:45",
+      body: "<p>Dear Customer,</p><p>Your current account ····0417 has been credited with " + ev("ev-interest", "₹9,340.00") + " on 30-06-2026 towards quarterly interest on average balance.</p><p class='sig'>KN Bank — do not reply to this alert</p>" }
+  ],
+  trail: [
+    { k: "", b: "MATCHED", t: "Jun 30 · 23:52", x: "Every alert on the feed this month reconciled to a posting: May salary batch (<strong>V-601</strong>), card autopay (<strong>V-603</strong>), bank charges (<strong>V-604</strong>), PF/ESI (<strong>V-610</strong>), professional tax (<strong>V-626</strong>), quarterly interest (<strong>V-628</strong>)." },
+    { k: "", b: "CHECKING", t: "Jun 30 · 23:52", x: "Cross-check: no debit on the feed lacks a voucher, and no cash voucher lacks a bank movement. The two large credits of the month (Northwind, Helix) are on their own threads." }
+  ] }
+];
+
+// ======================================================================
+// BOOKS — accounts, vouchers, exceptions, month-end
+// ======================================================================
+var ACC = {
+  bank: "Bank — KN current a/c", ar: "Accounts receivable", equip: "Computers & equipment", gstin: "GST input credit",
+  ap: "Accounts payable", card: "Corporate card payable", salpay: "Salaries payable", tds: "TDS payable",
+  gstpay: "GST payable", pf: "PF & ESI payable",
+  rev: "Staffing revenue", intinc: "Interest income",
+  sal: "Salaries & consultant costs", soft: "Software & cloud", travel: "Travel & stay", office: "Office & facilities",
+  meals: "Meals & pantry", recruit: "Recruitment", comm: "Communication", ins: "Insurance", prof: "Professional fees",
+  util: "Utilities", rates: "Rates & taxes", courier: "Postage & courier", bankchg: "Bank charges"
+};
+var TB_SECTIONS = [
+  ["Assets", ["bank", "ar", "equip", "gstin"]],
+  ["Liabilities", ["ap", "card", "salpay", "tds", "gstpay", "pf"]],
+  ["Income", ["rev", "intinc"]],
+  ["Expenses", ["sal", "soft", "travel", "office", "meals", "recruit", "comm", "ins", "prof", "util", "rates", "courier", "bankchg"]]
+];
+function accName(spec) { var p = spec.split(":"); return ACC[p[0]] + (p[1] ? " · " + p[1] : ""); }
+function accKey(spec) { return spec.split(":")[0]; }
+
+// lines: [accountSpec, debit, credit]
+var VOUCHERS = [
+  { id: "V-601", day: 1, date: "Jun 01", narr: "May salary batch paid out — SAL-MAY-26, 38 credits",
+    lines: [["salpay", 6610000, 0], ["bank", 0, 6610000]], rcpt: { t: "bank", ev: "ev-sal-may" } },
+  { id: "V-602", day: 2, date: "Jun 02", narr: "CloudSuite CRM — June subscription · INV-8841",
+    lines: [["soft", 165000, 0], ["ap:CloudSuite", 0, 165000]], rcpt: { t: "cloudsuite", doc: "doc-cs", ev: "ev-cs-total" } },
+  { id: "V-603", day: 4, date: "Jun 04", narr: "Corporate card autopay — May statement cycle",
+    lines: [["card", 329150, 0], ["bank", 0, 329150]], rcpt: { t: "bank", ev: "ev-autopay" } },
+  { id: "V-604", day: 4, date: "Jun 04", narr: "Bank charges — account maintenance & NEFT, May",
+    lines: [["bankchg", 1180, 0], ["bank", 0, 1180]], rcpt: { t: "bank", ev: "ev-charges" } },
+  { id: "V-605", day: 4, date: "Jun 04", narr: "OfficePlus — chairs & desk converters · #4471",
+    lines: [["office", 96000, 0], ["ap:OfficePlus", 0, 96000]], rcpt: { t: "officeplus", doc: "doc-op", ev: "ev-op-total" } },
+  { id: "V-606", day: 6, date: "Jun 06", narr: "Airtel Business — leased line + SIMs, June",
+    lines: [["comm", 21240, 0], ["ap:Airtel", 0, 21240]], rcpt: { t: "airtel", ev: "ev-airtel" } },
+  { id: "V-607", day: 7, date: "Jun 07", narr: "SecureLife — group medical renewal, 40 lives",
+    lines: [["ins", 48500, 0], ["bank", 0, 48500]], rcpt: { t: "securelife", ev: "ev-sl-amt" } },
+  { id: "V-608", day: 8, date: "Jun 08", narr: "CityServe — housekeeping & facilities, June",
+    lines: [["office", 64900, 0], ["ap:CityServe", 0, 64900]], rcpt: { t: "cityserve", ev: "ev-cse-amt" } },
+  { id: "V-609", day: 9, date: "Jun 09", narr: "Northwind Logistics — payment received against INV-2093",
+    lines: [["bank", 1540000, 0], ["ar:Northwind", 0, 1540000]], rcpt: { t: "northwind-pay", ev: "ev-nw-credit" } },
+  { id: "V-610", day: 9, date: "Jun 09", narr: "EPFO/ESIC remittance — May 2026",
+    lines: [["pf", 512000, 0], ["bank", 0, 512000]], rcpt: { t: "bank", ev: "ev-pf" } },
+  { id: "V-611", day: 10, date: "Jun 10", narr: "Wanderline Travels — Atlas rollout group booking · WT-2288",
+    lines: [["travel", 76400, 0], ["ap:Wanderline", 0, 76400]], rcpt: { t: "wanderline", ev: "ev-wl-amt" } },
+  { id: "V-612", day: 10, date: "Jun 10", narr: "OfficePlus — credit note CN-118 against #4471 (5%)",
+    lines: [["ap:OfficePlus", 4800, 0], ["office", 0, 4800]], rcpt: { t: "officeplus", doc: "doc-cn", ev: "ev-cn-amt" } },
+  { id: "V-622", day: 13, date: "Jun 13", narr: "Reimbursement — R. Mehta, personally paid airport cab",
+    lines: [["travel", 4210, 0], ["bank", 0, 4210]], rcpt: { t: "trip", ev: "ev-cab-amt" } },
+  { id: "V-613", day: 16, date: "Jun 16", narr: "INV-2107 — Northwind Logistics, June cycle 1",
+    lines: [["ar:Northwind", 3850000, 0], ["rev", 0, 3850000]], rcpt: { t: "cycle1", doc: "doc-2107", ev: "ev-2107-total" } },
+  { id: "V-614", day: 16, date: "Jun 16", narr: "BSES — electricity, May consumption (auto-debit)",
+    lines: [["util", 42318, 0], ["bank", 0, 42318]], rcpt: { t: "bses", ev: "ev-bses-amt" } },
+  { id: "V-615", day: 17, date: "Jun 17", narr: "Vertex Supplies — networking hardware · #5512 · PAYMENT HELD (EX-4)",
+    lines: [["equip", 631356, 0], ["gstin", 113644, 0], ["ap:Vertex", 0, 745000]], rcpt: { t: "vertex", doc: "doc-vx", ev: "ev-vx-total" }, held: true },
+  { id: "V-616", day: 18, date: "Jun 18", narr: "Compute Hub — 2 laptops, new joiners · CH-26-1104",
+    lines: [["equip", 155932, 0], ["gstin", 28068, 0], ["ap:Compute Hub", 0, 184000]], rcpt: { t: "computehub", doc: "doc-ch", ev: "ev-ch-total" } },
+  { id: "V-617", day: 19, date: "Jun 19", narr: "Helix Pharma — payment received against INV-2095",
+    lines: [["bank", 1200000, 0], ["ar:Helix", 0, 1200000]], rcpt: { t: "helix-pay", ev: "ev-hx-credit" } },
+  { id: "V-619", day: 19, date: "Jun 19", narr: "TDS deposited — May 2026, challan CIN 0281-2606-00417",
+    lines: [["tds", 284000, 0], ["bank", 0, 284000]], rcpt: { t: "sharma", doc: "doc-challans", ev: "ev-tds-amt" } },
+  { id: "V-620", day: 19, date: "Jun 19", narr: "GST deposited — GSTR-3B May 2026",
+    lines: [["gstpay", 561000, 0], ["bank", 0, 561000]], rcpt: { t: "sharma", doc: "doc-challans", ev: "ev-gst-amt" } },
+  { id: "V-618", day: 20, date: "Jun 20", narr: "Sharma & Associates — compliance fee, May",
+    lines: [["prof", 35000, 0], ["ap:Sharma & Assoc.", 0, 35000]], rcpt: { t: "sharma", doc: "doc-challans", ev: "ev-sharma-fee" } },
+  { id: "V-621", day: 21, date: "Jun 21", narr: "TalentBridge — hiring platform renewal, FY 2026-27",
+    lines: [["recruit", 59000, 0], ["ap:TalentBridge", 0, 59000]], rcpt: { t: "talentbridge", ev: "ev-tb-amt" } },
+  { id: "V-626", day: 21, date: "Jun 21", narr: "Professional tax — May 2026, all registrations",
+    lines: [["rates", 7500, 0], ["bank", 0, 7500]], rcpt: { t: "bank", ev: "ev-pt" } },
+  { id: "V-623", day: 30, date: "Jun 30", narr: "INV-2108 — Atlas Retail, June cycle 2",
+    lines: [["ar:Atlas", 2100000, 0], ["rev", 0, 2100000]], rcpt: { t: "cycle2", ev: "ev-c2-atlas" } },
+  { id: "V-624", day: 30, date: "Jun 30", narr: "INV-2109 — Helix Pharma, June cycle 2",
+    lines: [["ar:Helix", 1425000, 0], ["rev", 0, 1425000]], rcpt: { t: "cycle2", ev: "ev-c2-helix" } },
+  { id: "V-625", day: 30, date: "Jun 30", narr: "INV-2110 — Orbit Systems, June cycle 2 · PO ORB-556",
+    lines: [["ar:Orbit", 875000, 0], ["rev", 0, 875000]], rcpt: { t: "cycle2", ev: "ev-c2-orbit" } },
+  { id: "V-627", day: 30, date: "Jun 30", narr: "June salary batch paid out — after 2-of-2 approval",
+    lines: [["salpay", 6840000, 0], ["bank", 0, 6840000]], rcpt: { t: "payroll", ev: "ev-pay-paid" } },
+  { id: "V-628", day: 30, date: "Jun 30", narr: "Quarterly interest on average balance",
+    lines: [["bank", 9340, 0], ["intinc", 0, 9340]], rcpt: { t: "bank", ev: "ev-interest" } }
+];
+
+// card batch → generated vouchers (33 posted; the held line is shown, not counted)
+var CARD_VOUCHERS = [];
+(function () {
+  var n = 0;
+  CARD.forEach(function (l, i) {
+    if (l[3] === "held") return;
+    n++;
+    var r = { t: "card-stmt", doc: "doc-card", ev: "card-" + i };
+    if (i === 2) r = { t: "aws", doc: "doc-aws", ev: "ev-aws-total" };
+    if (l[3] === "late") r = { t: "receipts", ev: i === 9 ? "ev-r-amazon" : "ev-r-uber" };
+    CARD_VOUCHERS.push({ id: "C-" + (600 + n), day: 12, date: l[0], narr: l[1], late: l[3] === "late",
+      lines: [[l[4], l[2], 0], ["card", 0, l[2]]], rcpt: r });
+  });
+})();
+
+// payroll batch → generated vouchers (38 rows)
+var PAY_VOUCHERS = PAYROLL.map(function (r, i) {
+  var rc = { t: "payroll", doc: "doc-pay", ev: "pr-" + i };
+  if (r[0] === "Dev Krishnan") rc = { t: "ts-approve", ev: "ev-rohit-ok" };
+  return { id: "P-" + (601 + i), day: 28, date: "Jun 28", narr: r[0] + " — " + r[1],
+    lines: [["sal", r[2], 0], ["salpay", 0, r[2]]], rcpt: rc };
+});
+
+var ALL_VOUCHERS = VOUCHERS.concat(CARD_VOUCHERS, PAY_VOUCHERS);
+console.assert(ALL_VOUCHERS.length === 99, "voucher count", ALL_VOUCHERS.length);
+ALL_VOUCHERS.forEach(function (v) {
+  var dr = 0, cr = 0;
+  v.lines.forEach(function (l) { dr += l[1]; cr += l[2]; });
+  console.assert(dr === cr, "unbalanced voucher " + v.id, dr, cr);
+});
+
+// ---- exceptions (open case files) ----
+var EXCEPTIONS = [
+  { id: "EX-1", chip: "caught", cls: "caught", title: "Duplicate invoice — DeskWorks DW-3307", amt: "₹1,80,000.00 kept",
+    sum: "DeskWorks re-issued the May–Jun lease bill under a new invoice number. Same amount, same period as DW-3291 — which was paid on May 8. Not posted, not paid. Meridian's own accountant had posted it to rent; that error surfaces in the month-end diff.",
+    chain: [
+      { n: "01", q: "<b>DW-3307</b> read Jun 05 · ₹1,80,000.00 · “Office lease, 4th floor — May–Jun 2026 period”" },
+      { n: "02", q: "payment archive: <b>DW-3291</b> · ₹1,80,000.00 · same period · paid 2026-05-08 · NEFT UTR KNBN2612808441" },
+      { n: "03", q: "written back to vendor Jun 05 · vendor reply Jun 09: “our billing system re-raised the… invoice under a new number — please <b>disregard DW-3307</b>”" }
+    ],
+    links: [{ t: "deskworks", l: "Open the thread" }] },
+  { id: "EX-2", chip: "held", cls: "held", title: "Card charge above its receipt — Meridian Air", amt: "₹5,000.00 protected",
+    sum: "The corporate card was charged ₹17,500.00 on Jun 10; the flight receipt R. Mehta submitted reads ₹12,500.00. The agent posted nothing for this line and asked, in writing, for whatever document covers the difference. Still open at month-end.",
+    chain: [
+      { n: "01", q: "card statement, line of Jun 10: <b>MERIDIAN AIR · ₹17,500.00</b>" },
+      { n: "02", q: "meridian_air_receipt.pdf (from R. Mehta, Jun 12): fare total <b>₹12,500.00</b> · PNR MX4QZL" },
+      { n: "03", q: "question sent Jun 13: “was there a date change, seat or baggage fee that has a separate receipt?” · no reply yet" }
+    ],
+    links: [{ t: "card-stmt", l: "Open the statement thread" }, { t: "trip", l: "Open the receipts thread" }] },
+  { id: "EX-3", chip: "resolved", cls: "resolved", title: "Timesheet without approval — Dev Krishnan", amt: "₹1,49,500.00 · resolved Jun 26",
+    sum: "23 days at Atlas Retail, rate and roster both verified — but no manager approval anywhere on the thread. Held out of payroll and a written question sent to Rohit Malhotra. He approved on Jun 26 citing the site attendance log; the row entered the journal with its approval evidence linked.",
+    chain: [
+      { n: "01", q: "timesheet_june_dev-krishnan.xlsx: days <b>23</b> · rate ₹6,500 ✓ contract · roster ✓ Atlas — approval cell <b>blank</b>" },
+      { n: "02", q: "question to manager, Jun 24: “approve or amend before [payroll on] the 28th?”" },
+      { n: "03", q: "rohit.malhotra, Jun 26 18:40: “<b>Approved: 23 days is correct</b>… cross-checked against the site attendance log”" }
+    ],
+    links: [{ t: "timesheet", l: "Open the timesheet thread" }, { t: "ts-approve", l: "Open the approval" }] },
+  { id: "EX-4", chip: "blocked", cls: "blocked", title: "Bank-detail change on the invoice — Vertex Supplies", amt: "₹7,45,000.00 payment blocked",
+    sum: "Invoice #5512 is genuine — it matches PO-2231 and the goods receipt, and the liability is posted. But the email asks for payment to a new account, and 11 prior payments went elsewhere. No payment moves until a person confirms the change by phone on the number in the vendor master, not the one in the email.",
+    chain: [
+      { n: "01", q: "invoice #5512: “Bank details (updated): <b>A/C ····7742 · IFSC HDFC0004XX</b>… we have recently changed banks”" },
+      { n: "02", q: "vendor master: A/C <b>····3391 · ICICI</b> · unchanged since Aug 2024 · 11 payments, all to this account" },
+      { n: "03", q: "rule fired: bank-detail change ⇒ payment hold + callback verification · flagged to Priya Jun 17 · callback pending" }
+    ],
+    links: [{ t: "vertex", l: "Open the thread" }] }
+];
+
+// ---- month-end comparison ----
+// Meridian's own books differ in two places: DW-3307 posted to rent (their error),
+// and June payroll run without Dev Krishnan (approval landed after their run).
+var DIFF_ROWS = [
+  { k: "rev", flip: true }, { k: "sal", d: -149500, why: "Meridian ran payroll on the morning of Jun 26, before Rohit's approval landed that evening. Dev Krishnan's ₹1,49,500 is in Nien's books with evidence; Meridian pays him in July." },
+  { k: "soft" }, { k: "travel" },
+  { k: "rent", nien: 0, mer: 180000, d: 180000, why: "Meridian's accountant posted DW-3307 — the re-numbered duplicate of a lease already paid May 8. Nien refused it; the vendor confirmed in writing it is void. Their error, caught before payment." },
+  { k: "office" }, { k: "meals" }, { k: "recruit" }, { k: "comm" }, { k: "ins" },
+  { k: "prof" }, { k: "util" }, { k: "rates" }, { k: "courier" }, { k: "bankchg" }
+];
+
+// ---- guided tour ----
+var TOUR = [
+  { view: "inbox", setup: function () { openThread("deskworks"); },
+    target: function () { return document.querySelectorAll("#trail .fcard")[2]; },
+    text: "Start with the invoice Meridian already paid. DeskWorks re-sent their May lease bill under a new number — same amount, same period. The agent checked the payment archive before posting anything, wrote back to the vendor, and kept <strong>₹1,80,000</strong> from going out twice." },
+  { view: "exceptions", setup: null,
+    target: function () { return document.querySelector('[data-case="EX-4"]'); },
+    text: "The oldest trick in accounts payable: a real invoice with “updated bank details”. The invoice posts — the debt is real — but the <strong>payment stays blocked</strong> until a person calls the vendor on the number already on file." },
+  { view: "books", setup: null,
+    target: function () { return document.querySelector('#register .vrow .rcpt'); },
+    text: "This is the point of the whole thing. Every voucher row has a <strong>receipt link</strong> — click one and it walks you back to the exact line in the email or document the number came from. Try it after the tour, on any row." },
+  { view: "monthend", setup: null,
+    target: function () { return document.querySelector("#difftable"); },
+    text: "Month-end: Nien's parallel books against Meridian's own. <strong>99 vouchers, 2 differences</strong> — the duplicate rent Meridian posted, and the late-approved timesheet. Both explained, in writing, with the mail to prove it." }
+];
+
+// ======================================================================
+// APP
+// ======================================================================
+var state = { view: "inbox", thread: null, read: {}, tour: -1 };
+var SORTED = THREADS.slice().sort(function (a, b) { return b.d - a.d; });
+
+function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+// ---- view switching ----
+var VIEWS = ["inbox", "books", "exceptions", "monthend"];
+function setView(v) {
+  state.view = v;
+  VIEWS.forEach(function (x) {
+    $("view-" + x).classList.toggle("on", x === v);
+    $("tab-" + x).classList.toggle("on", x === v);
+  });
+  document.body.classList.toggle("inbox-on", v === "inbox");
+}
+VIEWS.forEach(function (x) { $("tab-" + x).addEventListener("click", function () { setView(x); }); });
+
+// ---- thread list ----
+function attName(t) {
+  var n = 0; t.msgs.forEach(function (m) { if (m.att) n++; });
+  return n ? (n === 1 ? "1 attachment" : n + " attachments") : null;
+}
+function renderList() {
+  var h = "";
+  SORTED.forEach(function (t) {
+    var unread = t.unread && !state.read[t.id];
+    h += '<button class="thread' + (state.thread === t.id ? " active" : "") + (unread ? " unread" : "") + '" data-th="' + t.id + '">' +
+      '<div class="row1"><span class="from">' + (unread ? '<span class="udot"></span>' : "") + esc(t.fromName) + "</span>" +
+      '<span class="date">' + t.date + "</span></div>" +
+      '<div class="subj">' + esc(t.subj) + "</div>";
+    var extras = "";
+    if (t.flag) extras += '<span class="badge ' + t.flag + '">' + t.flag + "</span>";
+    var an = attName(t);
+    if (an) extras += '<span class="att-mini">' + an + "</span>";
+    if (extras) h += '<div class="row2">' + extras + "</div>";
+    h += "</button>";
+  });
+  $("threads").innerHTML = h;
+}
+
+// ---- thread detail ----
+function threadById(id) { return THREADS.filter(function (t) { return t.id === id; })[0]; }
+function openThread(id) {
+  var t = threadById(id);
+  if (!t) return;
+  state.thread = id; state.read[id] = true;
+  setView("inbox");
+  renderList();
+  $("empty").hidden = true;
+  $("msghead").hidden = false;
+  $("msgs").hidden = false;
+  $("mh-subj").textContent = t.subj;
+  $("mh-meta").textContent = t.msgs.length + (t.msgs.length === 1 ? " message" : " messages") + " · " + esc(t.from);
+  var h = "";
+  t.msgs.forEach(function (m, i) {
+    h += '<div class="msg"><div class="mhead"><span class="mfrom">' + esc(m.fn) + "<span>" + esc(m.fa) + '</span></span>' +
+      '<span class="mdate">' + m.date + '</span></div>' +
+      '<div class="mto">to ' + esc(m.to) + "</div>" +
+      '<div class="mbody">' + m.body + "</div>";
+    if (m.quoted) h += '<button class="qbtn" data-q="q-' + i + '">··· quoted text</button><div class="quoted" id="q-' + t.id + "-" + i + '">' + m.quoted + "</div>";
+    if (m.att) {
+      var ext = m.att.name.split(".").pop().toUpperCase();
+      h += '<button class="attchip" data-doc="' + m.att.doc + '"><span class="ic">' + ext + "</span>" + esc(m.att.name) + " · " + m.att.size + "</button>";
+    }
+    h += "</div>";
+  });
+  $("msgs").innerHTML = h;
+  var th = "";
+  t.trail.forEach(function (c) {
+    th += '<div class="fcard' + (c.k ? " " + c.k : "") + '"><div class="fb"><span>books agent · ' + c.t + '</span><span class="fbadge">' + c.b + "</span></div>" +
+      '<div class="ft">' + c.x + "</div>";
+    if (c.ev) th += '<div class="ev">' + c.ev + "</div>";
+    if (c.vch) th += '<div class="vch">' + c.vch.map(function (l) { return "<div><span>" + l[0] + '</span><span class="amt">' + l[1] + "</span></div>"; }).join("") + "</div>";
+    th += "</div>";
+  });
+  $("trail").innerHTML = th;
+  $("msgscroll").scrollTop = 0;
+  $("pane-trail").querySelector(".scroll").scrollTop = 0;
+  document.body.classList.add("thread-open");
+}
+$("back").addEventListener("click", function () { document.body.classList.remove("thread-open"); });
+
+// ---- document overlay ----
+var overlayOpen = false;
+function openDoc(id) {
+  var d = DOCS[id];
+  if (!d) return;
+  $("odoc").innerHTML = '<div class="doc' + (d.skin ? " " + d.skin : "") + '">' + d.html + "</div>";
+  $("overlay").classList.add("on");
+  $("oclose").hidden = false;
+  $("overlay").scrollTop = 0;
+  overlayOpen = true;
+}
+function closeDoc() {
+  $("overlay").classList.remove("on");
+  $("oclose").hidden = true;
+  overlayOpen = false;
+}
+$("oclose").addEventListener("click", closeDoc);
+$("overlay").addEventListener("click", function (e) { if (!e.target.closest(".doc")) closeDoc(); });
+
+// ---- the reverse walk: voucher → evidence ----
+function pulseEv(evId, scope) {
+  var el = scope.querySelector('[data-ev="' + evId + '"]');
+  if (!el) return false;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.remove("pulse");
+  void el.offsetWidth;
+  el.classList.add("pulse");
+  return true;
+}
+function openReceipt(t, doc, evId) {
+  openThread(t);
+  if (doc) {
+    openDoc(doc);
+    setTimeout(function () { pulseEv(evId, $("odoc")); }, 120);
+  } else {
+    closeDoc();
+    setTimeout(function () { pulseEv(evId, $("msgs")); }, 120);
+  }
+}
+
+// ---- global click delegation ----
+document.addEventListener("click", function (e) {
+  var el;
+  if ((el = e.target.closest(".thread[data-th]"))) { openThread(el.getAttribute("data-th")); return; }
+  if ((el = e.target.closest(".attchip[data-doc]"))) { openDoc(el.getAttribute("data-doc")); return; }
+  if ((el = e.target.closest(".qbtn"))) {
+    var q = el.nextElementSibling;
+    if (q) q.classList.toggle("open");
+    return;
+  }
+  if ((el = e.target.closest(".rcpt[data-t]"))) {
+    openReceipt(el.getAttribute("data-t"), el.getAttribute("data-doc") || null, el.getAttribute("data-ev"));
+    return;
+  }
+  if ((el = e.target.closest(".tlink[data-t]"))) { openThread(el.getAttribute("data-t")); return; }
+  if ((el = e.target.closest("[data-goview]"))) { setView(el.getAttribute("data-goview")); return; }
+  if ((el = e.target.closest(".vgroup > .ghead"))) {
+    var g = el.parentElement;
+    g.classList.toggle("open");
+    el.querySelector(".gtw").textContent = g.classList.contains("open") ? "collapse ▴" : "expand ▾";
+    return;
+  }
+});
+
+// ---- books rendering ----
+function rcptBtn(r) {
+  return '<button class="rcpt" data-t="' + r.t + '"' + (r.doc ? ' data-doc="' + r.doc + '"' : "") + ' data-ev="' + r.ev + '">receipt ↗</button>';
+}
+function vrowHtml(v, compact) {
+  var dr = 0;
+  v.lines.forEach(function (l) { dr += l[1]; });
+  var h = '<div class="vrow' + (v.held ? " held-note" : "") + '"><div class="vtop">' +
+    '<span class="vd">' + v.date + '</span><span class="vid">' + v.id + '</span>' +
+    '<span class="vn">' + esc(v.narr) + '</span>' +
+    '<span class="vamt">' + fmt(dr) + "</span>" + rcptBtn(v.rcpt) + "</div>";
+  if (!compact) {
+    h += '<div class="vlines">' + v.lines.map(function (l) {
+      return (l[1] ? '<span class="dr">Dr ' : "<span>Cr ") + esc(accName(l[0])) + " — " + fmt(l[1] || l[2]) + "</span>";
+    }).join("<br>") + "</div>";
+  }
+  h += "</div>";
+  return h;
+}
+function renderBooks() {
+  // totals per account
+  var T = {}, totDr = 0, totCr = 0;
+  ALL_VOUCHERS.forEach(function (v) {
+    v.lines.forEach(function (l) {
+      var k = accKey(l[0]);
+      if (!T[k]) T[k] = { dr: 0, cr: 0 };
+      T[k].dr += l[1]; T[k].cr += l[2];
+      totDr += l[1]; totCr += l[2];
+    });
+  });
+  console.assert(totDr === totCr, "trial balance", totDr, totCr);
+
+  $("bstats").innerHTML =
+    '<div class="stat"><div class="v">' + ALL_VOUCHERS.length + '</div><div class="k">vouchers · June</div></div>' +
+    '<div class="stat"><div class="v">' + fmt0(totDr) + '</div><div class="k">total Dr = total Cr</div></div>' +
+    '<div class="stat"><div class="v">₹1,85,000</div><div class="k">kept from leaving</div></div>' +
+    '<div class="stat"><div class="v warn">4</div><div class="k">exceptions raised · 2 still open</div></div>';
+
+  var tb = '<table class="tb"><tr><th>Account</th><th class="num">Dr</th><th class="num">Cr</th></tr>';
+  TB_SECTIONS.forEach(function (s) {
+    tb += '<tr class="sect"><td colspan="3">' + s[0] + "</td></tr>";
+    s[1].forEach(function (k) {
+      var t = T[k] || { dr: 0, cr: 0 };
+      tb += "<tr><td>" + ACC[k] + '</td><td class="num">' + (t.dr ? fmt(t.dr) : "—") + '</td><td class="num">' + (t.cr ? fmt(t.cr) : "—") + "</td></tr>";
+    });
+  });
+  tb += '<tr class="tot"><td>June movement</td><td class="num">' + fmt(totDr) + '</td><td class="num">' + fmt(totCr) + "</td></tr></table>";
+  $("tbwrap").innerHTML = tb;
+
+  $("regcount").textContent = ALL_VOUCHERS.length + " entries";
+  var items = VOUCHERS.slice();
+  items.push({ group: "card", day: 12.05 });
+  items.push({ group: "pay", day: 28.05 });
+  items.sort(function (a, b) { return a.day - b.day; });
+  var h = "";
+  items.forEach(function (v) {
+    if (v.group === "card") {
+      h += '<div class="vgroup"><button class="ghead"><span class="vd">Jun 12</span>' +
+        '<span class="gname">Corporate card — June cycle</span>' +
+        '<span class="gmeta">' + CARD_VOUCHERS.length + " vouchers · " + fmt(CARD_POSTED) + ' posted · 1 line held</span>' +
+        '<span class="gtw">expand ▾</span></button><div class="gkids">';
+      CARD_VOUCHERS.forEach(function (c) { h += vrowHtml(c, true); });
+      h += '<div class="vrow held-note"><div class="vtop"><span class="vd">Jun 10</span><span class="vid">—</span>' +
+        '<span class="vn">Meridian Air — charge ₹17,500.00 vs receipt ₹12,500.00 · NOT POSTED</span>' +
+        '<span class="vamt">₹5,000.00 held</span>' +
+        '<button class="rcpt" data-goview="exceptions">case EX-2 ↗</button></div></div>';
+      h += "</div></div>";
+    } else if (v.group === "pay") {
+      h += '<div class="vgroup"><button class="ghead"><span class="vd">Jun 28</span>' +
+        '<span class="gname">Payroll journal — June</span>' +
+        '<span class="gmeta">' + PAY_VOUCHERS.length + " vouchers · " + fmt(PAY_TOTAL) + ' · approved 2-of-2</span>' +
+        '<span class="gtw">expand ▾</span></button><div class="gkids">';
+      PAY_VOUCHERS.forEach(function (p) { h += vrowHtml(p, true); });
+      h += "</div></div>";
+    } else {
+      h += vrowHtml(v, false);
+    }
+  });
+  $("register").innerHTML = h;
+}
+
+// ---- exceptions ----
+function renderExceptions() {
+  var h = "";
+  EXCEPTIONS.forEach(function (x) {
+    h += '<div class="case ' + x.cls + '" data-case="' + x.id + '"><div class="chead">' +
+      '<span class="cid">' + x.id + '</span><span class="badge ' + x.cls + '">' + x.chip + "</span>" +
+      '<span class="amt">' + x.amt + "</span></div>" +
+      "<h3>" + x.title + "</h3>" +
+      '<div class="csum">' + x.sum + "</div>" +
+      '<div class="chain">' + x.chain.map(function (s) {
+        return '<div class="step"><span class="sn">' + s.n + '</span><span class="sq">' + s.q + "</span></div>";
+      }).join("") + "</div>" +
+      '<div class="clinks">' + x.links.map(function (l) {
+        return '<button class="cta sec tlink" data-t="' + l.t + '">' + l.l + " →</button>";
+      }).join("") + "</div></div>";
+  });
+  $("cases").innerHTML = h;
+}
+
+// ---- month-end ----
+function renderMonthEnd() {
+  var T = {};
+  ALL_VOUCHERS.forEach(function (v) {
+    v.lines.forEach(function (l) {
+      var k = accKey(l[0]);
+      if (!T[k]) T[k] = { dr: 0, cr: 0 };
+      T[k].dr += l[1]; T[k].cr += l[2];
+    });
+  });
+  $("mstats").innerHTML =
+    '<div class="stat"><div class="v">99</div><div class="k">vouchers posted</div></div>' +
+    '<div class="stat"><div class="v">₹1,85,000</div><div class="k">caught before it left</div></div>' +
+    '<div class="stat"><div class="v warn">2</div><div class="k">differences vs their books — both explained</div></div>' +
+    '<div class="stat"><div class="v">100%</div><div class="k">of entries traced to mail</div></div>';
+
+  var h = "<tr><th>Account</th><th class=\"num\">Nien — parallel books</th><th class=\"num\">Meridian — their books</th><th class=\"num\">Δ</th><th style='text-align:center'>Status</th></tr>";
+  DIFF_ROWS.forEach(function (r) {
+    var name = r.k === "rent" ? "Rent" : ACC[r.k];
+    var t = T[r.k] || { dr: 0, cr: 0 };
+    var nien = r.nien !== undefined ? r.nien : (r.flip ? t.cr - t.dr : t.dr - t.cr);
+    var mer = r.mer !== undefined ? r.mer : nien + (r.d || 0);
+    var dif = mer - nien;
+    h += "<tr" + (dif ? ' class="dif"' : "") + "><td>" + name + '</td><td class="num">' + fmt(nien) + '</td><td class="num">' + fmt(mer) + "</td>" +
+      '<td class="num">' + (dif ? (dif > 0 ? "+" : "−") + fmt(Math.abs(dif)).slice(1) : "—") + "</td>" +
+      (dif ? '<td class="ok" style="color:var(--amber)">explained ↓</td>' : '<td class="ok">match ✓</td>') + "</tr>";
+  });
+  $("difftable").innerHTML = h;
+
+  var e = "";
+  DIFF_ROWS.forEach(function (r) {
+    if (!r.why) return;
+    var name = r.k === "rent" ? "Rent — ₹1,80,000.00 only in Meridian's books" : "Salaries — ₹1,49,500.00 only in Nien's books";
+    var links = r.k === "rent"
+      ? '<button class="cta sec tlink" data-t="deskworks">Open the DeskWorks thread →</button>'
+      : '<button class="cta sec tlink" data-t="ts-approve">Open the approval thread →</button>';
+    e += '<div class="case ' + (r.k === "rent" ? "caught" : "resolved") + '"><div class="chead">' +
+      '<span class="cid">difference</span><span class="badge ' + (r.k === "rent" ? "caught" : "resolved") + '">' + (r.k === "rent" ? "their error" : "resolved Jun 26") + "</span></div>" +
+      "<h3>" + name + "</h3>" +
+      '<div class="csum">' + r.why + "</div>" +
+      '<div class="clinks">' + links + '<button class="cta sec" data-goview="exceptions">See the case file →</button></div></div>';
+  });
+  $("explain").innerHTML = e;
+}
+
+// ---- keyboard ----
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    if (overlayOpen) { closeDoc(); return; }
+    if (state.tour >= 0) { endTour(); return; }
+    if (!$("intro").classList.contains("gone")) dismissIntro();
+    return;
+  }
+  if (state.view !== "inbox" || overlayOpen) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    var idx = -1;
+    SORTED.forEach(function (t, i) { if (t.id === state.thread) idx = i; });
+    idx = e.key === "ArrowDown" ? Math.min(SORTED.length - 1, idx + 1) : Math.max(0, idx - 1);
+    openThread(SORTED[idx].id);
+    var row = document.querySelector('.thread[data-th="' + SORTED[idx].id + '"]');
+    if (row) row.scrollIntoView({ block: "nearest" });
+  }
+});
+
+// ---- guided tour ----
+var tourTarget = null;
+function clearTourTarget() {
+  if (tourTarget) tourTarget.classList.remove("tour-target");
+  tourTarget = null;
+}
+function showTourStep(i) {
+  clearTourTarget();
+  state.tour = i;
+  var s = TOUR[i];
+  setView(s.view);
+  if (s.setup) s.setup();
+  setTimeout(function () {
+    var el = s.target();
+    if (!el) { endTour(); return; }
+    el.scrollIntoView({ behavior: "auto", block: "center" });
+    el.classList.add("tour-target");
+    tourTarget = el;
+    $("tp-n").textContent = i + 1;
+    $("tp-t").innerHTML = s.text;
+    $("tp-s").textContent = (i + 1) + " / " + TOUR.length;
+    $("tp-next").textContent = i === TOUR.length - 1 ? "Done" : "Next";
+    var pin = $("tourpin");
+    pin.classList.add("on");
+    setTimeout(function () {
+      var r = el.getBoundingClientRect();
+      var ph = pin.offsetHeight, pw = pin.offsetWidth;
+      var left = Math.min(Math.max(12, r.left), innerWidth - pw - 12);
+      var top = r.bottom + 12;
+      if (top + ph > innerHeight - 12) top = r.top - ph - 12;
+      top = Math.min(Math.max(12, top), innerHeight - ph - 12);
+      pin.style.left = left + "px";
+      pin.style.top = top + "px";
+    }, 260);
+  }, 120);
+}
+function startTour() { $("intro").classList.add("gone"); showTourStep(0); }
+function endTour() {
+  clearTourTarget();
+  state.tour = -1;
+  $("tourpin").classList.remove("on");
+  store("nien_demo_seen", "1");
+}
+$("tp-next").addEventListener("click", function () {
+  if (state.tour >= TOUR.length - 1) endTour();
+  else showTourStep(state.tour + 1);
+});
+$("tp-end").addEventListener("click", endTour);
+$("btn-tour").addEventListener("click", function () { showTourStep(0); });
+
+// ---- intro ----
+function dismissIntro() {
+  $("intro").classList.add("gone");
+  store("nien_demo_seen", "1");
+}
+$("btn-explore").addEventListener("click", dismissIntro);
+$("btn-taketour").addEventListener("click", startTour);
+
+// ---- boot ----
+renderList();
+renderBooks();
+renderExceptions();
+renderMonthEnd();
+if (!stored("nien_demo_seen")) $("intro").classList.remove("gone");
+})();
+
+
+
+
+</script>
+</body>
+</html>
